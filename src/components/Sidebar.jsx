@@ -13,7 +13,7 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { name: "Inventory", icon: Boxes, path: "/inventory" },
   { name: "Property Tagging", icon: Tag, path: "/property-tagging" },
   { name: "Visitors", icon: Users, path: "/visitors" },

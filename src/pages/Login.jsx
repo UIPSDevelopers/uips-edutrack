@@ -1,32 +1,73 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "@/lib/axios";
+import { toast } from "sonner"; // Optional: only if you use shadcn toast
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // 🔐 Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/dashboard");
+  }, [navigate]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login submitted:", formData);
+    setLoading(true);
+    setError("");
+
+    try {
+      // ✅ API call
+      const response = await axiosInstance.post("/api/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // ✅ Handle successful login
+      if (response.data && response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        toast.success(`Welcome back, ${response.data.user.firstname}!`);
+        navigate("/dashboard");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      const msg =
+        err.response?.data?.message ||
+        "An unexpected error occurred. Please try again.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-rose-50 via-gray-50 to-slate-100 font-poppins overflow-hidden">
-      {/* Background Glow Shapes */}
+      {/* Background Glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-[#800000]/10 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-[#800000]/5 rounded-full blur-3xl animate-float-slow"></div>
       </div>
 
-      {/* Animated Card */}
+      {/* Card */}
       <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -35,7 +76,7 @@ export default function Login() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full max-w-sm bg-white/70 backdrop-blur-2xl border border-gray-200 rounded-3xl shadow-xl p-8 space-y-6"
         >
-          {/* Animated Logo + Title */}
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -55,7 +96,7 @@ export default function Login() {
             </p>
           </motion.div>
 
-          {/* Form */}
+          {/* Login Form */}
           <motion.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0 }}
@@ -65,12 +106,12 @@ export default function Login() {
           >
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                Email
+                Email or User ID
               </label>
               <Input
-                type="email"
+                type="text"
                 name="email"
-                placeholder="you@example.com"
+                placeholder="you@example.com or USR-0001"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -100,11 +141,17 @@ export default function Login() {
               </button>
             </div>
 
+            {error && (
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            )}
+
             <Button
               type="submit"
+              disabled={loading}
               className="w-full mt-3 bg-[#800000] hover:bg-[#9a1c1c] text-white font-medium py-2.5 rounded-xl shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
             >
-              <LogIn className="mr-2 h-4 w-4" /> Sign In
+              <LogIn className="mr-2 h-4 w-4" />
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </motion.form>
 
@@ -115,10 +162,7 @@ export default function Login() {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="text-center text-sm text-gray-500"
           >
-            <a
-              href="#"
-              className="hover:text-[#800000] font-medium transition"
-            >
+            <a href="#" className="hover:text-[#800000] font-medium transition">
               Forgot password?
             </a>
           </motion.div>

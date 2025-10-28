@@ -4,35 +4,98 @@ import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
+import { Package, ClipboardCheck, Wrench } from "lucide-react";
+import InventoryTabs from "@/pages/inventory/InventoryTabs";
 
 export default function Inventory() {
   const [items] = useState([
-    { id: 1, name: "Dell Laptop", tag: "INV-001", location: "Admin Office", status: "Active" },
-    { id: 2, name: "Epson Printer", tag: "INV-002", location: "ICT Room", status: "Maintenance" },
-    { id: 3, name: "Projector", tag: "INV-003", location: "Room 33", status: "Active" },
+    {
+      id: 1,
+      name: "Dell Laptop",
+      tag: "INV-001",
+      location: "Admin Office",
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "Epson Printer",
+      tag: "INV-002",
+      location: "ICT Room",
+      status: "Maintenance",
+    },
+    {
+      id: 3,
+      name: "Projector",
+      tag: "INV-003",
+      location: "Room 33",
+      status: "Active",
+    },
   ]);
+
+  const totalItems = items.length;
+  const activeItems = items.filter((i) => i.status === "Active").length;
+  const maintenanceItems = items.filter(
+    (i) => i.status === "Maintenance"
+  ).length;
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
       <Sidebar />
-
-      <div className="flex-1 ml-0 md:ml-64">
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
         <Topbar />
 
-        <main className="p-6 space-y-6">
-          {/* Header */}
+        <main className="p-6 space-y-8">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800">Inventory</h1>
-            <Button className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2">
-              <PlusCircle size={16} />
-              Add Item
-            </Button>
           </div>
 
-          {/* Inventory Table */}
+          {/* Tabs Navigation */}
+          <InventoryTabs />
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Total Items</p>
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {totalItems}
+                </h2>
+              </div>
+              <Package className="w-10 h-10 text-[#800000]" />
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Active</p>
+                <h2 className="text-2xl font-semibold text-green-600">
+                  {activeItems}
+                </h2>
+              </div>
+              <ClipboardCheck className="w-10 h-10 text-green-600" />
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Maintenance</p>
+                <h2 className="text-2xl font-semibold text-yellow-600">
+                  {maintenanceItems}
+                </h2>
+              </div>
+              <Wrench className="w-10 h-10 text-yellow-600" />
+            </motion.div>
+          </div>
+
+          {/* Table */}
           <Card className="shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="text-sm text-gray-500">
