@@ -25,7 +25,7 @@ export default function AddItem() {
     itemType: "",
     itemName: "",
     sizeOrSource: "",
-    barcodeOrSerial: "",
+    barcode: "",
     addedBy: "Juan Maquera",
   });
 
@@ -48,22 +48,48 @@ export default function AddItem() {
 
   // ✅ Generate barcode
   const handleGenerateBarcode = () => {
-    if (!form.barcodeOrSerial) {
+    if (!form.barcode) {
       alert("Please enter a Barcode or Serial Number first.");
       return;
     }
-    setBarcodeValue(form.barcodeOrSerial);
+    setBarcodeValue(form.barcode);
     setGeneratedBarcode(true);
   };
 
   // ✅ Handle save
-  const handleSave = () => {
-    if (!form.itemName || !form.itemType || !form.barcodeOrSerial) {
+  const handleSave = async () => {
+    if (!form.itemName || !form.itemType || !form.barcode) {
       alert("Please fill in all required fields.");
       return;
     }
-    console.log("New item added:", form);
-    alert("Item saved successfully! (Backend connection coming soon)");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/inventory/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ Item saved successfully! Generated ID: ${data.item.itemId}`);
+        console.log("New item:", data.item);
+        setForm({
+          itemType: "",
+          itemName: "",
+          sizeOrSource: "",
+          barcode: "",
+          addedBy: form.addedBy,
+        });
+        setGeneratedBarcode(false);
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("❌ Failed to connect to server");
+    }
   };
 
   // ✅ Handle print button
@@ -160,9 +186,9 @@ export default function AddItem() {
                 </label>
                 <div className="flex gap-2 mt-1">
                   <Input
-                    name="barcodeOrSerial"
+                    name="barcode"
                     placeholder="Enter barcode or serial number"
-                    value={form.barcodeOrSerial}
+                    value={form.barcode}
                     onChange={handleChange}
                   />
                   <Button
