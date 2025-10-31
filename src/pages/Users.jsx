@@ -38,7 +38,12 @@ export default function Users() {
     password: "",
   });
 
-  const [editUser, setEditUser] = useState(null); // For editing
+  const [editUser, setEditUser] = useState(null);
+
+  // ✅ Sidebar state (for mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
 
   // 🧠 Fetch all users
   useEffect(() => {
@@ -60,14 +65,25 @@ export default function Users() {
   // ➕ Add User Handler
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.firstname || !newUser.lastname || !newUser.email || !newUser.password)
+    if (
+      !newUser.firstname ||
+      !newUser.lastname ||
+      !newUser.email ||
+      !newUser.password
+    )
       return toast.error("Please fill all fields");
 
     try {
       const res = await axiosInstance.post("/api/users", newUser);
       setUsers((prev) => [...prev, res.data]);
       toast.success("User added successfully");
-      setNewUser({ firstname: "", lastname: "", email: "", role: "Staff", password: "" });
+      setNewUser({
+        firstname: "",
+        lastname: "",
+        email: "",
+        role: "Staff",
+        password: "",
+      });
       document.getElementById("closeAddDialogBtn").click();
     } catch (error) {
       console.error("Error adding user:", error);
@@ -79,10 +95,12 @@ export default function Users() {
   const handleEditUser = async (e) => {
     e.preventDefault();
     try {
-      const res = await axiosInstance.put(`/api/users/${editUser.userId}`, editUser);
+      const res = await axiosInstance.put(
+        `/api/users/${editUser.userId}`,
+        editUser
+      );
       toast.success("User updated successfully");
 
-      // Update the list without reloading
       setUsers((prev) =>
         prev.map((u) => (u.userId === editUser.userId ? res.data : u))
       );
@@ -96,10 +114,12 @@ export default function Users() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
+      {/* ✅ Sidebar toggle support */}
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 
-      <div className="flex-1 ml-0 md:ml-64">
-        <Topbar />
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
+        {/* ✅ Topbar with hamburger toggle */}
+        <Topbar onToggleSidebar={handleToggleSidebar} />
 
         <main className="p-6 space-y-6">
           <motion.div
@@ -133,7 +153,10 @@ export default function Users() {
                           placeholder="Enter first name"
                           value={newUser.firstname}
                           onChange={(e) =>
-                            setNewUser({ ...newUser, firstname: e.target.value })
+                            setNewUser({
+                              ...newUser,
+                              firstname: e.target.value,
+                            })
                           }
                           required
                         />
@@ -145,7 +168,10 @@ export default function Users() {
                           placeholder="Enter last name"
                           value={newUser.lastname}
                           onChange={(e) =>
-                            setNewUser({ ...newUser, lastname: e.target.value })
+                            setNewUser({
+                              ...newUser,
+                              lastname: e.target.value,
+                            })
                           }
                           required
                         />
@@ -240,7 +266,9 @@ export default function Users() {
                           <th className="p-3 font-medium">Name</th>
                           <th className="p-3 font-medium">Email</th>
                           <th className="p-3 font-medium">Role</th>
-                          <th className="p-3 font-medium text-right">Actions</th>
+                          <th className="p-3 font-medium text-right">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -351,8 +379,12 @@ export default function Users() {
                                           <SelectValue placeholder="Select role" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="Admin">Admin</SelectItem>
-                                          <SelectItem value="Staff">Staff</SelectItem>
+                                          <SelectItem value="Admin">
+                                            Admin
+                                          </SelectItem>
+                                          <SelectItem value="Staff">
+                                            Staff
+                                          </SelectItem>
                                           <SelectItem value="Security">
                                             Security
                                           </SelectItem>

@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { getCurrentUser } from "@/lib/getCurrentUser";
 
 export default function Checkout() {
   const [barcode, setBarcode] = useState("");
@@ -26,10 +27,14 @@ export default function Checkout() {
   const [transactionNo, setTransactionNo] = useState("");
   const barcodeInputRef = useRef(null);
 
+  // ✅ Sidebar state (for mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
+
   // 🧍 Auto-fill current user
   useEffect(() => {
-    const currentUser = localStorage.getItem("uipsUser") || "Juan Maquera";
-    setIssuedBy(currentUser);
+    setIssuedBy(getCurrentUser());
   }, []);
 
   // Auto-focus barcode input
@@ -120,6 +125,7 @@ export default function Checkout() {
           itemName: i.itemName,
           itemType: i.itemType,
           barcode: i.barcode,
+          sizeOrSource: i.sizeOrSource,
           quantity: i.qty,
         })),
       };
@@ -143,7 +149,6 @@ export default function Checkout() {
         setShowDialog(false);
       } else {
         console.log("Checkout error:", data);
-
         alert(`❌ ${data.message}`);
       }
     } catch (error) {
@@ -154,9 +159,12 @@ export default function Checkout() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
+      {/* ✅ Sidebar with toggle for mobile */}
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
+
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <Topbar />
+        {/* ✅ Topbar with working hamburger */}
+        <Topbar onToggleSidebar={handleToggleSidebar} />
 
         <main className="p-6 space-y-6">
           {/* Header */}

@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ClipboardCheck, Wrench, Search } from "lucide-react";
+import {
+  Package,
+  ClipboardCheck,
+  Wrench,
+  AlertTriangle,
+  Ban,
+  Clock,
+  Search,
+} from "lucide-react";
 import InventoryTabs from "@/pages/inventory/InventoryTabs";
 import {
   Select,
@@ -22,6 +30,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function Inventory() {
   const [items, setItems] = useState([]);
@@ -40,7 +50,12 @@ export default function Inventory() {
   });
   const [showDialog, setShowDialog] = useState(false);
 
-  // ✅ Fetch items from backend
+  // 🔹 Sidebar control
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
+
+  // ✅ Fetch items
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -96,7 +111,6 @@ export default function Inventory() {
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Save changes
   const handleUpdate = async () => {
     try {
       const res = await fetch(
@@ -123,7 +137,6 @@ export default function Inventory() {
     }
   };
 
-  // 🗑️ Delete item
   const handleDelete = async (itemId) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
@@ -142,11 +155,123 @@ export default function Inventory() {
     }
   };
 
+  // ✅ Export PDF
+  const handleExportPDF = async () => {
+    if (filtered.length === 0) {
+      alert("⚠️ No data to export.");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF("l", "pt", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFillColor(128, 0, 0);
+      doc.rect(0, 0, pageWidth, 80, "F");
+
+      const logoUrl = "https://i.postimg.cc/DWkx44nh/uips-logo.png";
+      try {
+        const logoResponse = await fetch(logoUrl);
+        const logoBlob = await logoResponse.blob();
+        const reader = new FileReader();
+
+        const logoBase64 = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(logoBlob);
+        });
+
+        doc.addImage(logoBase64, "PNG", 25, -2, 80, 80);
+      } catch {
+        console.warn("⚠️ Logo not loaded, continuing without image.");
+      }
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("United International Private School", pageWidth / 2, 38, {
+        align: "center",
+      });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("EduTrack Inventory Overview", pageWidth / 2, 58, {
+        align: "center",
+      });
+
+      const currentDate = new Date().toLocaleString();
+      doc.setFontSize(9);
+      doc.text(`Generated on: ${currentDate}`, pageWidth - 160, 72);
+
+      const headers = [
+        [
+          "#",
+          "Item ID",
+          "Item Name",
+          "Type",
+          "Size / Source",
+          "Barcode / Serial",
+          "Qty",
+          "Added By",
+        ],
+      ];
+
+      const body = filtered.map((item, index) => [
+        index + 1,
+        item.itemId,
+        item.itemName,
+        item.itemType,
+        item.sizeOrSource || "-",
+        item.barcode || "-",
+        item.quantity || 0,
+        item.addedBy || "-",
+      ]);
+
+      autoTable(doc, {
+        startY: 100,
+        head: headers,
+        body,
+        styles: { fontSize: 8, halign: "center", cellPadding: 4 },
+        headStyles: {
+          fillColor: [128, 0, 0],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      });
+
+      const totalItems = filtered.length;
+      const totalQuantity = filtered.reduce(
+        (acc, i) => acc + (i.quantity || 0),
+        0
+      );
+      const finalY = doc.lastAutoTable.finalY + 30;
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Total Items: ${totalItems}`, 40, finalY);
+      doc.text(`Total Quantity: ${totalQuantity}`, 180, finalY);
+
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        "UIPS EduTrack — Inventory Management System",
+        pageWidth / 2,
+        doc.internal.pageSize.height - 20,
+        { align: "center" }
+      );
+
+      doc.save(`UIPS_Inventory_${new Date().toISOString().split("T")[0]}.pdf`);
+    } catch (err) {
+      console.error("❌ PDF generation failed:", err);
+      alert("⚠️ Failed to generate PDF.");
+    }
+  };
+
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <Topbar />
+        <Topbar onToggleSidebar={handleToggleSidebar} />
 
         <main className="p-6 space-y-8">
           <div className="flex justify-between items-center mb-4">
@@ -156,10 +281,11 @@ export default function Inventory() {
           <InventoryTabs />
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            {/* Total Items */}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
             >
               <div>
                 <p className="text-sm text-gray-500">Total Items</p>
@@ -167,12 +293,16 @@ export default function Inventory() {
                   {totalItems}
                 </h2>
               </div>
-              <Package className="w-10 h-10 text-[#800000]" />
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-[#800000]/10 rounded-full" />
+                <Package className="w-10 h-10 text-[#800000] relative z-10" />
+              </div>
             </motion.div>
 
+            {/* Total Quantity */}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
             >
               <div>
                 <p className="text-sm text-gray-500">Total Quantity</p>
@@ -180,12 +310,16 @@ export default function Inventory() {
                   {totalQuantity}
                 </h2>
               </div>
-              <ClipboardCheck className="w-10 h-10 text-[#800000]" />
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-[#800000]/10 rounded-full" />
+                <ClipboardCheck className="w-10 h-10 text-[#800000] relative z-10" />
+              </div>
             </motion.div>
 
+            {/* Categories */}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
             >
               <div>
                 <p className="text-sm text-gray-500">Categories</p>
@@ -197,7 +331,70 @@ export default function Inventory() {
                   }
                 </h2>
               </div>
-              <Wrench className="w-10 h-10 text-yellow-600" />
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-yellow-400/20 rounded-full" />
+                <Wrench className="w-10 h-10 text-yellow-600 relative z-10" />
+              </div>
+            </motion.div>
+
+            {/* Low Stock */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Low Stock</p>
+                <h2 className="text-2xl font-semibold text-orange-600">
+                  {
+                    items.filter((i) => i.quantity > 0 && i.quantity < 10)
+                      .length
+                  }
+                </h2>
+              </div>
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-orange-400/20 rounded-full" />
+                <AlertTriangle className="w-10 h-10 text-orange-600 relative z-10" />
+              </div>
+            </motion.div>
+
+            {/* Out of Stock */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Out of Stock</p>
+                <h2 className="text-2xl font-semibold text-red-600">
+                  {items.filter((i) => i.quantity === 0).length}
+                </h2>
+              </div>
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-red-400/20 rounded-full" />
+                <Ban className="w-10 h-10 text-red-600 relative z-10" />
+              </div>
+            </motion.div>
+
+            {/* Recently Added */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
+            >
+              <div>
+                <p className="text-sm text-gray-500">Recently Added</p>
+                <h2 className="text-2xl font-semibold text-green-700">
+                  {
+                    items.filter(
+                      (i) =>
+                        new Date(i.createdAt) >=
+                        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    ).length
+                  }
+                </h2>
+              </div>
+              <div className="relative">
+                <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-green-400/20 rounded-full" />
+                <Clock className="w-10 h-10 text-green-700 relative z-10" />
+              </div>
             </motion.div>
           </div>
 
@@ -315,6 +512,15 @@ export default function Inventory() {
                 )}
               </div>
             </CardContent>
+            <div className="pt-4">
+              <Button
+                onClick={handleExportPDF}
+                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+              >
+                <Package className="w-4 h-4" />
+                Export as PDF
+              </Button>
+            </div>
           </Card>
 
           {/* ✏️ Edit Item Modal */}

@@ -21,20 +21,27 @@ import {
 export default function AddItem() {
   const [barcodeValue, setBarcodeValue] = useState("");
   const [generatedBarcode, setGeneratedBarcode] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user")); // retrieve user info
+
   const [form, setForm] = useState({
     itemType: "",
     itemName: "",
     sizeOrSource: "",
     barcode: "",
-    addedBy: "Juan Maquera",
+    addedBy: user ? `${user.firstname} ${user.lastname}` : "Unknown User",
   });
+
+  // ✅ Sidebar state (for mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
 
   // ✅ Ref for printable content
   const printRef = useRef(null);
 
-  // ✅ useReactToPrint (new API pattern)
+  // ✅ useReactToPrint (v3+)
   const print = useReactToPrint({
-    contentRef: printRef, // ✅ correct way for react-to-print v3+
+    contentRef: printRef,
     documentTitle: `Barcode_${form.itemName}`,
     onAfterPrint: () => console.log("Print completed."),
     onPrintError: (err) => console.error("Print failed:", err),
@@ -56,7 +63,7 @@ export default function AddItem() {
     setGeneratedBarcode(true);
   };
 
-  // ✅ Handle save
+  // ✅ Save item
   const handleSave = async () => {
     if (!form.itemName || !form.itemType || !form.barcode) {
       alert("Please fill in all required fields.");
@@ -74,7 +81,6 @@ export default function AddItem() {
 
       if (response.ok) {
         alert(`✅ Item saved successfully! Generated ID: ${data.item.itemId}`);
-        console.log("New item:", data.item);
         setForm({
           itemType: "",
           itemName: "",
@@ -96,7 +102,6 @@ export default function AddItem() {
   const handlePrintClick = () => {
     if (!printRef.current) {
       alert("There is nothing to print.");
-      console.warn("printRef is not available");
       return;
     }
     print();
@@ -104,9 +109,13 @@ export default function AddItem() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
-      <div className="flex-1 ml-0 md:ml-64">
-        <Topbar />
+      {/* Sidebar now controlled by state */}
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
+
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
+        {/* Topbar with working hamburger */}
+        <Topbar onToggleSidebar={handleToggleSidebar} />
+
         <main className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800">
@@ -215,10 +224,9 @@ export default function AddItem() {
               {/* ✅ Barcode Preview + Print */}
               {generatedBarcode && (
                 <div className="md:col-span-2 flex flex-col items-start mt-4 space-y-2">
-                  {/* Printable Area */}
                   <div
                     ref={printRef}
-                    className="bg-white p-6 border rounded-md flex flex-col items-center justify-center w-[350px] mx-auto print:w-full print:h-full print:items-center print:justify-center print:p-0"
+                    className="bg-white p-6 border rounded-md flex flex-col items-center justify-center w-[350px] mx-auto"
                     style={{
                       textAlign: "center",
                       pageBreakInside: "avoid",

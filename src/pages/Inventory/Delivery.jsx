@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { PackagePlus, ScanLine } from "lucide-react";
 import InventoryTabs from "./InventoryTabs";
+import { getCurrentUser } from "@/lib/getCurrentUser";
 
 export default function Delivery() {
   const [scanned, setScanned] = useState([]);
@@ -26,10 +27,14 @@ export default function Delivery() {
   const [supplier, setSupplier] = useState("");
   const barcodeInputRef = useRef(null);
 
+  // ✅ Sidebar state (for mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
+
   // 🧍 Auto-fill logged-in user
   useEffect(() => {
-    const currentUser = localStorage.getItem("uipsUser") || "Juan Maquera";
-    setReceivedBy(currentUser);
+    setReceivedBy(getCurrentUser());
   }, []);
 
   // Auto focus barcode input
@@ -73,7 +78,7 @@ export default function Delivery() {
             itemName: item.itemName,
             itemType: item.itemType,
             itemId: item.itemId,
-            sizeOrSource: item.sizeOrSource || "-", // ✅ automatically display
+            sizeOrSource: item.sizeOrSource || "-",
           },
         ]);
       }
@@ -151,13 +156,16 @@ export default function Delivery() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <Topbar />
+      {/* ✅ Sidebar toggle support */}
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 
-        <main className="p-6 space-y-8">
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
+        {/* ✅ Topbar with hamburger toggle */}
+        <Topbar onToggleSidebar={handleToggleSidebar} />
+
+        <main className="p-6 space-y-6">
           {/* Header */}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800">
               Delivery / Stock-In
             </h1>
@@ -227,9 +235,11 @@ export default function Delivery() {
                         <th className="p-3 text-left font-medium w-10">#</th>
                         <th className="p-3 text-left font-medium">Item Name</th>
                         <th className="p-3 text-left font-medium">Type</th>
-                        <th className="p-3 text-left font-medium">Size/Source</th>
+                        <th className="p-3 text-left font-medium">
+                          Size/Source
+                        </th>
                         <th className="p-3 text-left font-medium">Barcode</th>
-                        <th className="p-3 text-left font-medium w-20 text-center">
+                        <th className="p-3 text-center font-medium w-20">
                           Qty
                         </th>
                       </tr>

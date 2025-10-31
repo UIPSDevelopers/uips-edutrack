@@ -8,15 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileText } from "lucide-react";
 import InventoryTabs from "./InventoryTabs";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generatePDFTemplate } from "@/utils/generatePDFTemplate";
 
 export default function Reports() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [type, setType] = useState("delivery");
   const [data, setData] = useState([]);
+  const [totals, setTotals] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // ✅ Sidebar state (for mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -27,19 +32,14 @@ export default function Reports() {
         url = "http://localhost:5000/api/reports/delivery";
       if (type === "checkout")
         url = "http://localhost:5000/api/reports/checkout";
-      if (type === "current")
-        url = "http://localhost:5000/api/reports/inventory";
       if (type === "summary") url = "http://localhost:5000/api/reports/summary";
 
-      // ✅ Convert to full ISO string to include time
+      // ✅ Build date range query
       let query = "";
       if (from && to) {
         const fromDate = new Date(from);
         const toDate = new Date(to);
-
-        // Extend 'to' date to end of the day to include all records
         toDate.setHours(23, 59, 59, 999);
-
         query = `?from=${fromDate.toISOString()}&to=${toDate.toISOString()}`;
       }
 
@@ -56,7 +56,17 @@ export default function Reports() {
         return;
       }
 
-      setData(result);
+      // ✅ handle summary format or normal array
+      if (result.summary && Array.isArray(result.summary)) {
+        setData(result.summary);
+        setTotals(result.totals || null);
+      } else if (Array.isArray(result)) {
+        setData(result);
+        setTotals(null);
+      } else {
+        setData([]);
+        setTotals(null);
+      }
     } catch (error) {
       console.error("❌ Error generating report:", error);
       alert("⚠️ Server error while generating report.");
@@ -65,62 +75,50 @@ export default function Reports() {
     }
   };
 
-  const handleExportToPDF = () => {
-    const doc = new jsPDF();
-
-    // Header
-    doc.setFontSize(14);
-    doc.text("UIPS EduTrack - Inventory Report", 14, 15);
-    doc.setFontSize(11);
-    doc.text(`${type.charAt(0).toUpperCase() + type.slice(1)} Report`, 14, 23);
-
-    if (from || to) {
-      doc.setFontSize(10);
-      doc.text(`Date range: ${from || "Start"} to ${to || "Today"}`, 14, 30);
+  const handleExportToPDF = async () => {
+    if (!data || data.length === 0) {
+      alert("⚠️ No data to export.");
+      return;
     }
 
-    // Prepare data for the table
-    const tableColumn = Object.keys(data[0]);
-    const tableRows = data.map((item) =>
-      tableColumn.map((col) =>
+    const tableHeaders = Object.keys(data[0]);
+    const tableData = data.map((item) =>
+      tableHeaders.map((col) =>
         typeof item[col] === "object"
           ? JSON.stringify(item[col])
           : item[col]?.toString() || ""
       )
     );
 
-    // ✅ Use plugin directly
-    autoTable(doc, {
-      startY: 35,
-      head: [tableColumn],
-      body: tableRows,
-      styles: { fontSize: 8 },
+    const doc = await generatePDFTemplate({
+      title: "UIPS EduTrack Report",
+      subtitle: `${type.charAt(0).toUpperCase() + type.slice(1)} Report`,
+      tableHeaders,
+      tableData,
+      totals,
+      from,
+      to,
     });
 
-    // Footer
-    const currentDate = new Date().toLocaleString();
-    doc.setFontSize(9);
-    doc.text(
-      `Generated on ${currentDate}`,
-      14,
-      doc.internal.pageSize.height - 10
-    );
-
-    // Save file
     doc.save(`${type}_report_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar />
-      <div className="flex-1 ml-0 md:ml-64">
-        <Topbar />
+      {/* ✅ Sidebar toggle support */}
+      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
+
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
+        {/* ✅ Topbar with hamburger toggle */}
+        <Topbar onToggleSidebar={handleToggleSidebar} />
+
         <main className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800">
               Inventory Reports
             </h1>
           </div>
+
           <InventoryTabs />
 
           <Card className="border border-gray-200 shadow-sm">
@@ -129,6 +127,7 @@ export default function Reports() {
                 Report Filters
               </CardTitle>
             </CardHeader>
+
             <CardContent className="space-y-6">
               {/* 🔹 Filter Section */}
               <div className="flex flex-wrap gap-4 items-center">
@@ -139,7 +138,6 @@ export default function Reports() {
                 >
                   <option value="delivery">Delivery Report</option>
                   <option value="checkout">Checkout Report</option>
-                  <option value="current">Current Inventory</option>
                   <option value="summary">Inventory Summary</option>
                 </select>
 
@@ -212,6 +210,7 @@ export default function Reports() {
                       Report Results ({data.length})
                     </CardTitle>
                   </CardHeader>
+
                   <CardContent className="overflow-x-auto">
                     {data.length === 0 ? (
                       <p className="text-gray-600 text-sm">
@@ -221,14 +220,16 @@ export default function Reports() {
                       <table className="w-full text-sm border-collapse">
                         <thead className="bg-gray-100 text-gray-700">
                           <tr>
-                            {Object.keys(data[0]).map((key) => (
-                              <th
-                                key={key}
-                                className="p-2 text-left capitalize border-b"
-                              >
-                                {key.replace(/([A-Z])/g, " $1")}
-                              </th>
-                            ))}
+                            {(data.length > 0 ? Object.keys(data[0]) : []).map(
+                              (key) => (
+                                <th
+                                  key={key}
+                                  className="p-2 text-left capitalize border-b"
+                                >
+                                  {key.replace(/([A-Z])/g, " $1")}
+                                </th>
+                              )
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -249,6 +250,30 @@ export default function Reports() {
                         </tbody>
                       </table>
                     )}
+
+                    {/* ✅ Totals for summary */}
+                    {type === "summary" && totals && (
+                      <div className="mt-6 border-t pt-4 text-sm text-gray-700">
+                        <p>
+                          <span className="font-semibold">
+                            Total Delivered:
+                          </span>{" "}
+                          {totals.totalDelivered}
+                        </p>
+                        <p>
+                          <span className="font-semibold">
+                            Total Checked Out:
+                          </span>{" "}
+                          {totals.totalCheckedOut}
+                        </p>
+                        <p>
+                          <span className="font-semibold">
+                            Total Stock (as of date):
+                          </span>{" "}
+                          {totals.totalStockAsOfDate}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -257,7 +282,7 @@ export default function Reports() {
               {data.length > 0 && (
                 <div className="pt-4">
                   <Button
-                    onClick={() => handleExportToPDF()}
+                    onClick={handleExportToPDF}
                     className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
                   >
                     <Download size={16} />
