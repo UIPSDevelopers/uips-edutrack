@@ -11,6 +11,7 @@ import Inventory from "./pages/Inventory/Inventory";
 import AddItem from "@/pages/Inventory/AddItem";
 import Delivery from "@/pages/Inventory/Delivery";
 import Checkout from "@/pages/Inventory/Checkout";
+import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
 
 // ✅ Protected Route Wrapper
@@ -91,6 +92,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* 🆕 Returns Page */}
+          <Route
+            path="/inventory/returns"
+            element={
+              <ProtectedRoute>
+                <Returns />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/inventory/reports"
             element={

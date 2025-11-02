@@ -9,6 +9,7 @@ import {
   Truck,
   ShoppingCart,
   FileText,
+  Undo2,
 } from "lucide-react";
 
 export default function InventoryTabs() {
@@ -21,6 +22,7 @@ export default function InventoryTabs() {
     else if (location.pathname.includes("/add-item")) setActiveTab("add");
     else if (location.pathname.includes("/delivery")) setActiveTab("delivery");
     else if (location.pathname.includes("/checkout")) setActiveTab("checkout");
+    else if (location.pathname.includes("/returns")) setActiveTab("returns");
     else if (location.pathname.includes("/reports")) setActiveTab("reports");
   }, [location]);
 
@@ -33,7 +35,7 @@ export default function InventoryTabs() {
           overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300
           sm:justify-start md:justify-start lg:justify-start
         "
-        style={{ WebkitOverflowScrolling: "touch" }}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <TabsTrigger
           value="overview"
@@ -69,6 +71,16 @@ export default function InventoryTabs() {
           data-[state=active]:bg-[#800000] data-[state=active]:text-white"
         >
           <ShoppingCart size={16} /> Checkout / POS
+        </TabsTrigger>
+
+        {/* 🆕 New Returns Tab */}
+        <TabsTrigger
+          value="returns"
+          onClick={() => navigate("/inventory/returns")}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium min-w-fit
+          data-[state=active]:bg-[#800000] data-[state=active]:text-white"
+        >
+          <Undo2 size={16} /> Returns
         </TabsTrigger>
 
         <TabsTrigger
