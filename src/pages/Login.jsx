@@ -32,7 +32,7 @@ export default function Login() {
 
     try {
       // ✅ API call
-      const response = await axiosInstance.post("/api/auth/login", {
+      const response = await axiosInstance.post("/auth/login", {
         email: formData.email,
         password: formData.password,
       });
