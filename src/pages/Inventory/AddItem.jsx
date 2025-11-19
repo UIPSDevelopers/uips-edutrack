@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, Printer, Barcode } from "lucide-react";
-import InventoryTabs from "@/components/Inventory/InventoryTabs";
+import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import BarcodeGenerator from "react-barcode";
 import { useReactToPrint } from "react-to-print";
 import {

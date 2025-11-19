@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { PackagePlus, ScanLine } from "lucide-react";
-import InventoryTabs from "@/components/Inventory/InventoryTabs";
+import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import { getCurrentUser } from "@/lib/getCurrentUser";
 
 export default function Delivery() {

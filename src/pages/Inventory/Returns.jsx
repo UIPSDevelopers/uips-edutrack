@@ -25,7 +25,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import InventoryTabs from "@/components/Inventory/InventoryTabs";
+import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 
 // 🧩 Backend API
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
