@@ -14,7 +14,7 @@ import {
   Clock,
   Search,
 } from "lucide-react";
-import InventoryTabs from "@/pages/inventory/InventoryTabs";
+import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import {
   Select,
   SelectTrigger,
