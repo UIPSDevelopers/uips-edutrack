@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/lib/axios";
-import { toast } from "sonner"; // Optional: only if you use shadcn toast
+import { toast } from "sonner";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 🆕 NEW: Backend wake-up state
+  const [wakingUp, setWakingUp] = useState(true);
+
   const navigate = useNavigate();
 
   // 🔐 Redirect if already logged in
@@ -22,22 +26,48 @@ export default function Login() {
     if (token) navigate("/dashboard");
   }, [navigate]);
 
+  // 🆕 NEW: Warm up the backend when login page loads
+  useEffect(() => {
+    let cancelled = false;
+
+    async function warmup() {
+      try {
+        // hit Render backend immediately to wake it up
+        await axiosInstance.get("/api/health", { timeout: 30000 });
+      } catch (err) {
+        console.warn("Server is waking up...", err?.message || err);
+      } finally {
+        if (!cancelled) setWakingUp(false);
+      }
+    }
+
+    warmup();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
+    // 🆕 NEW: prevent login while server is still waking up
+    if (wakingUp) {
+      toast.info("Server is still waking up, please wait...");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // ✅ API call
       const response = await axiosInstance.post("/auth/login", {
         email: formData.email,
         password: formData.password,
       });
 
-      // ✅ Handle successful login
       if (response.data && response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -66,6 +96,18 @@ export default function Login() {
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-[#800000]/10 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-[#800000]/5 rounded-full blur-3xl animate-float-slow"></div>
       </div>
+
+      {/* 🆕 NEW: Wake-up banner */}
+      {wakingUp && (
+        <div className="absolute top-6 w-[90%] max-w-sm mx-auto text-center z-50">
+          <div className="bg-[#800000]/10 border border-[#800000]/30 text-[#800000] py-3 px-4 rounded-xl shadow-sm text-sm animate-pulse">
+            Waking up the server…  
+            <span className="text-xs block text-gray-600 mt-1">
+              (This usually takes 5–20 seconds on free hosting)
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Card */}
       <AnimatePresence mode="wait">
@@ -147,11 +189,15 @@ export default function Login() {
 
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full mt-3 bg-[#800000] hover:bg-[#9a1c1c] text-white font-medium py-2.5 rounded-xl shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              disabled={loading || wakingUp}
+              className="w-full mt-3 bg-[#800000] hover:bg-[#9a1c1c] text-white font-medium py-2.5 rounded-xl shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] disabled:opacity-60"
             >
               <LogIn className="mr-2 h-4 w-4" />
-              {loading ? "Signing in..." : "Sign In"}
+              {wakingUp
+                ? "Warming up..."
+                : loading
+                ? "Signing in..."
+                : "Sign In"}
             </Button>
           </motion.form>
 
