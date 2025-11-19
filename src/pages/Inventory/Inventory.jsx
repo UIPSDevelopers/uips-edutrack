@@ -39,6 +39,8 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All");
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -59,7 +61,7 @@ export default function Inventory() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/inventory");
+        const res = await fetch(`${API_BASE_URL}/api/inventory`);
         const data = await res.json();
         setItems(data);
         setFiltered(data);
@@ -114,7 +116,7 @@ export default function Inventory() {
   const handleUpdate = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/inventory/${editingItem.itemId}`,
+        `${API_BASE_URL}/api/inventory/${editingItem.itemId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -140,7 +142,7 @@ export default function Inventory() {
   const handleDelete = async (itemId) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/inventory/${itemId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/inventory/${itemId}`, {
         method: "DELETE",
       });
       const data = await res.json();

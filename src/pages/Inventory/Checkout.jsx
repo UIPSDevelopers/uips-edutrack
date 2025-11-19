@@ -26,6 +26,8 @@ export default function Checkout() {
   const [checkoutId, setCheckoutId] = useState("");
   const [transactionNo, setTransactionNo] = useState("");
   const barcodeInputRef = useRef(null);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 
   // ✅ Sidebar state (for mobile)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -48,7 +50,7 @@ export default function Checkout() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/inventory/barcode/${barcode}`
+        `${API_BASE_URL}/api/inventory/barcode/${barcode}`
       );
       const data = await res.json();
 
@@ -130,7 +132,7 @@ export default function Checkout() {
         })),
       };
 
-      const res = await fetch("http://localhost:5000/api/checkouts/add", {
+      const res = await fetch(`${API_BASE_URL}/api/checkouts/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -22,6 +22,8 @@ export default function Reports() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -29,10 +31,10 @@ export default function Reports() {
       let url = "";
 
       if (type === "delivery")
-        url = "http://localhost:5000/api/reports/delivery";
+        url = "${API_BASE_URL}/api/reports/delivery";
       if (type === "checkout")
-        url = "http://localhost:5000/api/reports/checkout";
-      if (type === "summary") url = "http://localhost:5000/api/reports/summary";
+        url = "${API_BASE_URL}/api/reports/checkout";
+      if (type === "summary") url = "${API_BASE_URL}/api/reports/summary";
 
       // ✅ Build date range query
       let query = "";

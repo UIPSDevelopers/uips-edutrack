@@ -22,6 +22,8 @@ export default function AddItem() {
   const [barcodeValue, setBarcodeValue] = useState("");
   const [generatedBarcode, setGeneratedBarcode] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")); // retrieve user info
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [form, setForm] = useState({
     itemType: "",
@@ -71,7 +73,7 @@ export default function AddItem() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/inventory/add", {
+      const response = await fetch(`${API_BASE_URL}/api/inventory/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

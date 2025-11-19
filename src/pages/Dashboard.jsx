@@ -34,14 +34,16 @@ export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [topCheckedOut, setTopCheckedOut] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const [summaryRes, topRes, recentRes] = await Promise.all([
-          fetch("http://localhost:5000/api/dashboard/summary"),
-          fetch("http://localhost:5000/api/dashboard/top-checkedout"),
-          fetch("http://localhost:5000/api/dashboard/recent"),
+          fetch(`${API_BASE_URL}/api/dashboard/summary`),
+          fetch(`${API_BASE_URL}/api/dashboard/top-checkedout`),
+          fetch(`${API_BASE_URL}/api/dashboard/recent`),
         ]);
 
         const summary = await summaryRes.json();
