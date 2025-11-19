@@ -13,6 +13,7 @@ import Delivery from "@/pages/Inventory/Delivery";
 import Checkout from "@/pages/Inventory/Checkout";
 import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
+import { useWarmupServer } from "@/hooks/useWarmupServer";
 
 // ✅ Protected Route Wrapper
 function ProtectedRoute({ children }) {
@@ -27,9 +28,28 @@ function PublicRoute({ children }) {
 }
 
 function App() {
+  const token = localStorage.getItem("token");
+  const { isWarmingUp } = useWarmupServer(token);
+
   return (
     <Router>
-      <main>
+      <main className="relative min-h-screen">
+        {/* 💤 Waking up server overlay (only when logged in) */}
+        {token && isWarmingUp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 p-6 rounded-2xl shadow-lg bg-white">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+              <p className="text-sm font-medium text-gray-800">
+                Waking up the server…
+              </p>
+              <p className="text-xs text-gray-500 text-center max-w-xs">
+                EduTrack backend is hosted on free Render, so the first request
+                after being idle may take a few seconds.
+              </p>
+            </div>
+          </div>
+        )}
+
         <Routes>
           {/* 🟢 Public Routes */}
           <Route
