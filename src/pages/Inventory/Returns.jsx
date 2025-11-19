@@ -28,7 +28,7 @@ import {
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 
 // 🧩 Backend API
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/";
 
 // ✅ Helper functions
 async function fetchCheckoutByRef(receiptNo) {

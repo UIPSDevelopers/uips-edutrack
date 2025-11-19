@@ -31,10 +31,10 @@ export default function Reports() {
       let url = "";
 
       if (type === "delivery")
-        url = "${API_BASE_URL}/api/reports/delivery";
+        url = "${API_BASE_URL}/reports/delivery";
       if (type === "checkout")
-        url = "${API_BASE_URL}/api/reports/checkout";
-      if (type === "summary") url = "${API_BASE_URL}/api/reports/summary";
+        url = "${API_BASE_URL}/reports/checkout";
+      if (type === "summary") url = "${API_BASE_URL}/reports/summary";
 
       // ✅ Build date range query
       let query = "";

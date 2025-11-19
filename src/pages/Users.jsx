@@ -52,7 +52,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axiosInstance.get("/api/users");
+      const res = await axiosInstance.get("/users");
       setUsers(res.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -74,7 +74,7 @@ export default function Users() {
       return toast.error("Please fill all fields");
 
     try {
-      const res = await axiosInstance.post("/api/users", newUser);
+      const res = await axiosInstance.post("/users", newUser);
       setUsers((prev) => [...prev, res.data]);
       toast.success("User added successfully");
       setNewUser({
@@ -96,7 +96,7 @@ export default function Users() {
     e.preventDefault();
     try {
       const res = await axiosInstance.put(
-        `/api/users/${editUser.userId}`,
+        `/users/${editUser.userId}`,
         editUser
       );
       toast.success("User updated successfully");

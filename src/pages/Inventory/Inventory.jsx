@@ -61,7 +61,7 @@ export default function Inventory() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/inventory`);
+        const res = await fetch(`${API_BASE_URL}/inventory`);
         const data = await res.json();
         setItems(data);
         setFiltered(data);
@@ -116,7 +116,7 @@ export default function Inventory() {
   const handleUpdate = async () => {
     try {
       const res = await fetch(
-        `${API_BASE_URL}/api/inventory/${editingItem.itemId}`,
+        `${API_BASE_URL}/inventory/${editingItem.itemId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -142,7 +142,7 @@ export default function Inventory() {
   const handleDelete = async (itemId) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/inventory/${itemId}`, {
+      const res = await fetch(`${API_BASE_URL}/inventory/${itemId}`, {
         method: "DELETE",
       });
       const data = await res.json();

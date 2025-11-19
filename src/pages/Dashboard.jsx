@@ -41,9 +41,9 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const [summaryRes, topRes, recentRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/dashboard/summary`),
-          fetch(`${API_BASE_URL}/api/dashboard/top-checkedout`),
-          fetch(`${API_BASE_URL}/api/dashboard/recent`),
+          fetch(`${API_BASE_URL}/dashboard/summary`),
+          fetch(`${API_BASE_URL}/dashboard/top-checkedout`),
+          fetch(`${API_BASE_URL}/dashboard/recent`),
         ]);
 
         const summary = await summaryRes.json();

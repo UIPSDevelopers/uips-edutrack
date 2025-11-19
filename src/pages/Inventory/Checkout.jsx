@@ -50,7 +50,7 @@ export default function Checkout() {
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/api/inventory/barcode/${barcode}`
+        `${API_BASE_URL}/inventory/barcode/${barcode}`
       );
       const data = await res.json();
 
@@ -132,7 +132,7 @@ export default function Checkout() {
         })),
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/checkouts/add`, {
+      const res = await fetch(`${API_BASE_URL}/checkouts/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
