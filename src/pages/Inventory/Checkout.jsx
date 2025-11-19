@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReceiptText, ScanLine, Trash2 } from "lucide-react";
-import InventoryTabs from "./InventoryTabs";
+import InventoryTabs from "@/components/Inventory/InventoryTabs";
 import {
   Dialog,
   DialogContent,
