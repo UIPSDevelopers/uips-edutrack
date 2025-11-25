@@ -14,6 +14,8 @@ import Checkout from "@/pages/Inventory/Checkout";
 import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
 import { useWarmupServer } from "@/hooks/useWarmupServer";
+import useAutoLogout from "@/hooks/useAutoLogout";
+
 
 // ✅ Protected Route Wrapper
 function ProtectedRoute({ children }) {
@@ -30,6 +32,7 @@ function PublicRoute({ children }) {
 function App() {
   const token = localStorage.getItem("token");
   const { isWarmingUp } = useWarmupServer(token);
+  useAutoLogout();
 
   return (
     <Router>
