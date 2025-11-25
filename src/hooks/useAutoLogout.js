@@ -1,33 +1,41 @@
+// src/hooks/useAutoLogout.js
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
-export default function useAutoLogout() {
-  const navigate = useNavigate();
-  const IDLE_TIME = 15 * 60 * 1000; // 15 minutes
-
+export default function useAutoLogout(enabled = true, idleMinutes = 15) {
   useEffect(() => {
-    let timeout;
+    if (!enabled) return; // 🔒 only run when enabled
 
-    const resetTimer = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    const IDLE_TIME = idleMinutes * 60 * 1000; // minutes → ms
+    let timeoutId;
 
-        navigate("/login?reason=session_expired&msg=Session expired due to inactivity");
-      }, IDLE_TIME);
+    const logoutNow = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      const params = new URLSearchParams({
+        reason: "session_expired",
+        msg: "Session expired due to inactivity",
+      });
+
+      // Hard redirect – no React Router hook needed
+      window.location.href = `/login?${params.toString()}`;
     };
 
-    // Activity events
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(logoutNow, IDLE_TIME);
+    };
+
     const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
 
     events.forEach((ev) => window.addEventListener(ev, resetTimer));
 
-    resetTimer(); // Start on load
+    // start timer immediately
+    resetTimer();
 
     return () => {
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
     };
-  }, [navigate]);
+  }, [enabled, idleMinutes]);
 }

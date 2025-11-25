@@ -32,7 +32,8 @@ function PublicRoute({ children }) {
 function App() {
   const token = localStorage.getItem("token");
   const { isWarmingUp } = useWarmupServer(token);
-  useAutoLogout();
+  // 🆕 enable idle logout only when logged in
+  useAutoLogout(!!token, 15); // enabled=true/false, 15 minutes
 
   return (
     <Router>
