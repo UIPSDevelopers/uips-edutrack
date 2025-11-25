@@ -1,10 +1,8 @@
 // src/hooks/useAutoLogout.js
 import { useEffect } from "react";
 
-export default function useAutoLogout(enabled = true, idleMinutes = 15) {
+export default function useAutoLogout(idleMinutes = 15) {
   useEffect(() => {
-    if (!enabled) return; // 🔒 only run when enabled
-
     const IDLE_TIME = idleMinutes * 60 * 1000; // minutes → ms
     let timeoutId;
 
@@ -37,5 +35,5 @@ export default function useAutoLogout(enabled = true, idleMinutes = 15) {
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
       clearTimeout(timeoutId);
     };
-  }, [enabled, idleMinutes]);
+  }, [idleMinutes]);
 }

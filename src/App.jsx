@@ -33,7 +33,7 @@ function App() {
   const token = localStorage.getItem("token");
   const { isWarmingUp } = useWarmupServer(token);
   // 🆕 enable idle logout only when logged in
-  useAutoLogout(!!token, 15); // enabled=true/false, 15 minutes
+  useAutoLogout(15);
 
   return (
     <Router>
