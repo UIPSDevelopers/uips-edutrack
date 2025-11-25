@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom"; // 🆕 useSearchParams
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 
@@ -15,10 +15,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🆕 NEW: Backend wake-up state
+  // 🆕 Backend wake-up state
   const [wakingUp, setWakingUp] = useState(true);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // 🆕 read URL query params
+
+  // 🆕 Read session-expired info from URL
+  const reason = searchParams.get("reason");
+  const msgFromUrl = searchParams.get("msg");
 
   // 🔐 Redirect if already logged in
   useEffect(() => {
@@ -26,13 +31,23 @@ export default function Login() {
     if (token) navigate("/dashboard");
   }, [navigate]);
 
-  // 🆕 NEW: Warm up the backend when login page loads
+  // 🆕 If redirected due to session expiry, show message
+  useEffect(() => {
+    if (reason === "session_expired") {
+      const message =
+        msgFromUrl ||
+        "Your session has expired due to inactivity. Please sign in again.";
+      setError(message);
+      toast.info(message);
+    }
+  }, [reason, msgFromUrl]);
+
+  // 🆕 Warm up the backend when login page loads
   useEffect(() => {
     let cancelled = false;
 
     async function warmup() {
       try {
-        // hit Render backend immediately to wake it up
         await axiosInstance.get("/api/health", { timeout: 30000 });
       } catch (err) {
         console.warn("Server is waking up...", err?.message || err);
@@ -54,7 +69,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // 🆕 NEW: prevent login while server is still waking up
+    // 🆕 prevent login while server is still waking up
     if (wakingUp) {
       toast.info("Server is still waking up, please wait...");
       return;
@@ -97,19 +112,18 @@ export default function Login() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-[#800000]/5 rounded-full blur-3xl animate-float-slow"></div>
       </div>
 
-      {/* 🆕 NEW: Wake-up banner */}
+      {/* 🆕 Wake-up banner */}
       {wakingUp && (
         <div className="absolute top-6 w-[90%] max-w-sm mx-auto text-center z-50">
           <div className="bg-[#800000]/10 border border-[#800000]/30 text-[#800000] py-3 px-4 rounded-xl shadow-sm text-sm animate-pulse">
-            Waking up the server…  
+            Waking up the server…
             <span className="text-xs block text-gray-600 mt-1">
-              (This usually takes 5–20 seconds on free hosting)
+              Please wait a moment before signing in.
             </span>
           </div>
         </div>
       )}
 
-      {/* Card */}
       <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -137,6 +151,14 @@ export default function Login() {
               Academic Monitoring System
             </p>
           </motion.div>
+
+          {/* 🆕 Session expired banner (inside card) */}
+          {reason === "session_expired" && (
+            <div className="text-xs rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-center">
+              {msgFromUrl ||
+                "Your session has expired due to inactivity. Please sign in again."}
+            </div>
+          )}
 
           {/* Login Form */}
           <motion.form
@@ -206,11 +228,19 @@ export default function Login() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="text-center text-sm text-gray-500"
+            className="text-center text-xs text-gray-500 space-y-1"
           >
-            <a href="#" className="hover:text-[#800000] font-medium transition">
+            <a
+              href="#"
+              className="block text-sm hover:text-[#800000] font-medium transition"
+            >
               Forgot password?
             </a>
+            {/* 🆕 small professional note about timeout */}
+            <p>
+              For security, you will be signed out automatically after{" "}
+              <span className="font-medium">15 minutes of inactivity</span>.
+            </p>
           </motion.div>
         </motion.div>
       </AnimatePresence>
