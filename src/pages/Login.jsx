@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom"; // 🆕 useSearchParams
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 
@@ -15,11 +15,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🆕 Backend wake-up state
-  const [wakingUp, setWakingUp] = useState(true);
+  // 🆕 Backend wake-up state (now only used *during* login)
+  const [wakingUp, setWakingUp] = useState(false);
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // 🆕 read URL query params
+  const [searchParams] = useSearchParams();
 
   // 🆕 Read session-expired info from URL
   const reason = searchParams.get("reason");
@@ -42,26 +42,6 @@ export default function Login() {
     }
   }, [reason, msgFromUrl]);
 
-  // 🆕 Warm up the backend when login page loads
-  useEffect(() => {
-    let cancelled = false;
-
-    async function warmup() {
-      try {
-        await axiosInstance.get("/api/health", { timeout: 30000 });
-      } catch (err) {
-        console.warn("Server is waking up...", err?.message || err);
-      } finally {
-        if (!cancelled) setWakingUp(false);
-      }
-    }
-
-    warmup();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -69,15 +49,13 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // 🆕 prevent login while server is still waking up
-    if (wakingUp) {
-      toast.info("Server is still waking up, please wait...");
-      return;
-    }
-
     setLoading(true);
+    setWakingUp(true); // 🆕 show "waking up" while logging in
 
     try {
+      // 🧊 If you still want a dedicated warmup call, you *could* do:
+      // await axiosInstance.get("/api/health", { timeout: 30000 });
+
       const response = await axiosInstance.post("/auth/login", {
         email: formData.email,
         password: formData.password,
@@ -101,6 +79,7 @@ export default function Login() {
       toast.error(msg);
     } finally {
       setLoading(false);
+      setWakingUp(false); // 🆕 hide wake-up banner after attempt
     }
   };
 
@@ -112,13 +91,13 @@ export default function Login() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-[#800000]/5 rounded-full blur-3xl animate-float-slow"></div>
       </div>
 
-      {/* 🆕 Wake-up banner */}
+      {/* 🆕 Wake-up banner – now only when logging in */}
       {wakingUp && (
         <div className="absolute top-6 w-[90%] max-w-sm mx-auto text-center z-50">
           <div className="bg-[#800000]/10 border border-[#800000]/30 text-[#800000] py-3 px-4 rounded-xl shadow-sm text-sm animate-pulse">
             Waking up the server…
             <span className="text-xs block text-gray-600 mt-1">
-              Please wait a moment before signing in.
+              This may take a few seconds. Please wait while we connect.
             </span>
           </div>
         </div>
@@ -152,7 +131,7 @@ export default function Login() {
             </p>
           </motion.div>
 
-          {/* 🆕 Session expired banner (inside card) */}
+          {/* Session expired banner (inside card) */}
           {reason === "session_expired" && (
             <div className="text-xs rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-center">
               {msgFromUrl ||
@@ -211,7 +190,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              disabled={loading || wakingUp}
+              disabled={loading}
               className="w-full mt-3 bg-[#800000] hover:bg-[#9a1c1c] text-white font-medium py-2.5 rounded-xl shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] disabled:opacity-60"
             >
               <LogIn className="mr-2 h-4 w-4" />
@@ -236,7 +215,6 @@ export default function Login() {
             >
               Forgot password?
             </a>
-            {/* 🆕 small professional note about timeout */}
             <p>
               For security, you will be signed out automatically after{" "}
               <span className="font-medium">15 minutes of inactivity</span>.
