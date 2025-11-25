@@ -18,7 +18,7 @@ export default function useAutoLogout(enabled = true, idleMinutes = 15) {
       });
 
       // Hard redirect – no React Router hook needed
-      window.location.href = `/login?${params.toString()}`;
+      window.location.href = `/?${params.toString()}`;
     };
 
     const resetTimer = () => {

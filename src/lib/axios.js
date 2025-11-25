@@ -52,7 +52,7 @@ axiosInstance.interceptors.response.use(
         msg: message,
       });
 
-      window.location.href = `/login?${params.toString()}`; // change to "/" if your login route is "/"
+      window.location.href = `/?${params.toString()}`; // change to "/" if your login route is "/"
     }
 
     return Promise.reject(error);
