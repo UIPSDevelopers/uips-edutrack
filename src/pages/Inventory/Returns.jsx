@@ -28,12 +28,12 @@ import {
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 
 // 🧩 Backend API
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/";
 
 // ✅ Helper functions
 async function fetchCheckoutByRef(receiptNo) {
   try {
-    const res = await fetch(`${API_BASE}/checkouts/${receiptNo}`);
+    const res = await fetch(`${API_BASE_URL}/checkouts/${receiptNo}`);
     if (!res.ok) throw new Error("Checkout not found");
     return await res.json();
   } catch (err) {
@@ -44,7 +44,7 @@ async function fetchCheckoutByRef(receiptNo) {
 
 async function createReturn(payload) {
   try {
-    const res = await fetch(`${API_BASE}/returns`, {
+    const res = await fetch(`${API_BASE_URL}/returns`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -58,7 +58,7 @@ async function createReturn(payload) {
 
 async function getReturns() {
   try {
-    const res = await fetch(`${API_BASE}/returns`);
+    const res = await fetch(`${API_BASE_URL}/returns`);
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch {
