@@ -515,15 +515,13 @@ export default function Inventory() {
               </div>
             </CardContent>
             <div className="md:col-span-2">
-              <div className="pt-4">
-                <Button
-                  onClick={handleExportPDF}
-                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                >
-                  <Package className="w-4 h-4" />
-                  Export as PDF
-                </Button>
-              </div>
+              <Button
+                onClick={handleExportPDF}
+                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+              >
+                <Package className="w-4 h-4" />
+                Export as PDF
+              </Button>
             </div>
           </Card>
 
