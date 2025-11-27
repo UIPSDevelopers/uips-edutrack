@@ -38,9 +38,6 @@ export default function Users() {
     password: "",
   });
 
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
   const [editUser, setEditUser] = useState(null);
 
   // ✅ Sidebar state (for mobile)
@@ -48,22 +45,37 @@ export default function Users() {
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
 
-  // 🧠 Fetch all users
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // 👤 Get current user + role
+  const storedUser =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const role = user?.role;
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstance.get("/users");
-      setUsers(res.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users");
-    } finally {
+  // 🚫 IT-only access
+  const canAccessUsers = role === "IT";
+
+  // 🧠 Fetch all users (only if IT)
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axiosInstance.get("/users");
+        setUsers(res.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to fetch users");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!canAccessUsers) {
       setLoading(false);
+      setUsers([]);
+      return;
     }
-  };
+
+    fetchUsers();
+  }, [canAccessUsers]);
 
   // ➕ Add User Handler
   const handleAddUser = async (e) => {
@@ -78,7 +90,8 @@ export default function Users() {
     }
 
     try {
-      const res = await axiosInstance.post(`${API_BASE_URL}/users`, newUser);
+      // axiosInstance already has baseURL, just use relative path
+      const res = await axiosInstance.post("/users", newUser);
 
       const createdUser = res.data.user || res.data;
       setUsers((prev) => [...prev, createdUser]);
@@ -88,7 +101,7 @@ export default function Users() {
         firstname: "",
         lastname: "",
         email: "",
-        role: "IT",
+        role: "Staff",
         password: "",
       });
       document.getElementById("closeAddDialogBtn")?.click();
@@ -108,7 +121,7 @@ export default function Users() {
       console.log("🔹 Updating user:", editUser);
 
       const res = await axiosInstance.put(
-        `/users/${editUser.userId}`, 
+        `/users/${editUser.userId}`,
         editUser
       );
 
@@ -144,11 +157,30 @@ export default function Users() {
       {/* ✅ Sidebar toggle support */}
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
+      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300 relative">
         {/* ✅ Topbar with hamburger toggle */}
         <Topbar onToggleSidebar={handleToggleSidebar} />
 
-        <main className="p-6 space-y-6">
+        {/* 🚫 Unauthorized overlay (IT-only) */}
+        {!canAccessUsers && (
+          <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white shadow-lg border border-red-300 rounded-xl p-8 text-center w-[350px]">
+              <h2 className="text-xl font-semibold text-red-700 mb-2">
+                Unauthorized Access
+              </h2>
+              <p className="text-sm text-gray-600">
+                You do not have permission to access the Users Management
+                section.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <main
+          className={`p-6 space-y-6 ${
+            !canAccessUsers ? "pointer-events-none opacity-20" : ""
+          }`}
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -243,8 +275,8 @@ export default function Users() {
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Admin">IT</SelectItem>
-                          <SelectItem value="Staff">Accounts</SelectItem>
+                          <SelectItem value="IT">IT</SelectItem>
+                          <SelectItem value="Accounts">Accounts</SelectItem>
                           <SelectItem value="InventoryStaff">
                             Inventory Staff
                           </SelectItem>
@@ -252,6 +284,7 @@ export default function Users() {
                             Inventory Admin
                           </SelectItem>
                           <SelectItem value="Security">Security</SelectItem>
+                          <SelectItem value="Staff">Staff</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -319,9 +352,9 @@ export default function Users() {
                             <td className="p-3">
                               <span
                                 className={`px-2 py-1 rounded-full text-xs ${
-                                  user.role === "Admin"
+                                  user.role === "IT"
                                     ? "bg-red-100 text-red-700"
-                                    : user.role === "Staff"
+                                    : user.role === "Accounts"
                                     ? "bg-blue-100 text-blue-700"
                                     : "bg-green-100 text-green-700"
                                 }`}
@@ -412,14 +445,21 @@ export default function Users() {
                                           <SelectValue placeholder="Select role" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="Admin">
-                                            Admin
+                                          <SelectItem value="IT">IT</SelectItem>
+                                          <SelectItem value="Accounts">
+                                            Accounts
                                           </SelectItem>
-                                          <SelectItem value="Staff">
-                                            Staff
+                                          <SelectItem value="InventoryStaff">
+                                            Inventory Staff
+                                          </SelectItem>
+                                          <SelectItem value="InventoryAdmin">
+                                            Inventory Admin
                                           </SelectItem>
                                           <SelectItem value="Security">
                                             Security
+                                          </SelectItem>
+                                          <SelectItem value="Staff">
+                                            Staff
                                           </SelectItem>
                                         </SelectContent>
                                       </Select>
