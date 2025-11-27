@@ -119,10 +119,15 @@ export default function Login() {
             className="text-center"
           >
             <div className="flex justify-center mb-4">
-              <div className="h-14 w-14 rounded-2xl bg-[#800000] flex items-center justify-center text-white font-semibold text-lg shadow-md tracking-tight">
-                U
+              <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-md border border-[#800000]/20">
+                <img
+                  src="/edutrack.png" // 👈 file in public/
+                  alt="EduTrack logo"
+                  className="h-12 w-12 object-contain"
+                />
               </div>
             </div>
+
             <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
               UIPS EduTrack
             </h1>
