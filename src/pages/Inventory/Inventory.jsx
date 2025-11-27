@@ -513,16 +513,16 @@ export default function Inventory() {
                   </table>
                 )}
               </div>
+              <div className="md:col-span-2">
+                <Button
+                  onClick={handleExportPDF}
+                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  Export as PDF
+                </Button>
+              </div>
             </CardContent>
-            <div className="md:col-span-2">
-              <Button
-                onClick={handleExportPDF}
-                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-              >
-                <Package className="w-4 h-4" />
-                Export as PDF
-              </Button>
-            </div>
           </Card>
 
           {/* ✏️ Edit Item Modal */}
