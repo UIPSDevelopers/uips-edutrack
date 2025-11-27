@@ -124,7 +124,7 @@ export default function Login() {
               <img
                 src="/Edutrack.png"
                 alt="EduTrack Logo"
-                className="h-16 w-16 object-contain drop-shadow-md"
+                className="h-28 w-28 object-contain drop-shadow-md"
               />
             </div>
 
