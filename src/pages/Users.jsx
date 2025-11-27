@@ -78,7 +78,7 @@ export default function Users() {
     }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/users`, newUser);
+      const res = await axiosInstance.post(`${API_BASE_URL}/users`, newUser);
 
       const createdUser = res.data.user || res.data;
       setUsers((prev) => [...prev, createdUser]);
