@@ -88,7 +88,7 @@ export default function Users() {
         firstname: "",
         lastname: "",
         email: "",
-        role: "Staff",
+        role: "IT",
         password: "",
       });
       document.getElementById("closeAddDialogBtn")?.click();
