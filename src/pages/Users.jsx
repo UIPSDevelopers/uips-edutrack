@@ -216,8 +216,10 @@ export default function Users() {
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Staff">Staff</SelectItem>
+                          <SelectItem value="Admin">IT</SelectItem>
+                          <SelectItem value="Staff">Accounts</SelectItem>
+                          <SelectItem value="InventoryStaff">Inventory Staff</SelectItem>
+                          <SelectItem value="InventoryAdmin">Inventory Admin</SelectItem>
                           <SelectItem value="Security">Security</SelectItem>
                         </SelectContent>
                       </Select>
