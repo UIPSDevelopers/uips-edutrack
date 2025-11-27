@@ -15,7 +15,7 @@ export function useWarmupServer(token) {
     async function warmup() {
       try {
         // call your /api/health endpoint on Render
-        await axiosInstance.get("/api/health", { timeout: 30000 });
+        await axiosInstance.get("/health", { timeout: 30000 });
       } catch (err) {
         console.error("Warmup error:", err?.message || err);
       } finally {
