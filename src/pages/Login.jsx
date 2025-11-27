@@ -121,7 +121,7 @@ export default function Login() {
             <div className="flex justify-center mb-4">
               <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-md border border-[#800000]/20">
                 <img
-                  src="/edutrack.png" // 👈 file in public/
+                  src="/Edutrack.png" // 👈 file in public/
                   alt="EduTrack logo"
                   className="h-12 w-12 object-contain"
                 />
