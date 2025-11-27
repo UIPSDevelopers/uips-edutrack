@@ -38,6 +38,9 @@ export default function Users() {
     password: "",
   });
 
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
   const [editUser, setEditUser] = useState(null);
 
   // ✅ Sidebar state (for mobile)
@@ -70,12 +73,16 @@ export default function Users() {
       !newUser.lastname ||
       !newUser.email ||
       !newUser.password
-    )
+    ) {
       return toast.error("Please fill all fields");
+    }
 
     try {
-      const res = await axiosInstance.post("/users", newUser);
-      setUsers((prev) => [...prev, res.data]);
+      const res = await axios.post(`${API_BASE_URL}/users`, newUser);
+
+      const createdUser = res.data.user || res.data;
+      setUsers((prev) => [...prev, createdUser]);
+
       toast.success("User added successfully");
       setNewUser({
         firstname: "",
@@ -84,7 +91,7 @@ export default function Users() {
         role: "Staff",
         password: "",
       });
-      document.getElementById("closeAddDialogBtn").click();
+      document.getElementById("closeAddDialogBtn")?.click();
     } catch (error) {
       console.error("Error adding user:", error);
       toast.error(error.response?.data?.message || "Failed to add user");
@@ -94,21 +101,41 @@ export default function Users() {
   // ✏️ Edit User Handler
   const handleEditUser = async (e) => {
     e.preventDefault();
+
+    if (!editUser) return;
+
     try {
+      console.log("🔹 Updating user:", editUser);
+
       const res = await axiosInstance.put(
-        `/users/${editUser.userId}`,
+        `/users/${editUser.userId}`, 
         editUser
       );
-      toast.success("User updated successfully");
+
+      console.log("✅ Update user response:", res.data);
+
+      const updatedUser = res.data.user || res.data;
 
       setUsers((prev) =>
-        prev.map((u) => (u.userId === editUser.userId ? res.data : u))
+        prev.map((u) =>
+          u.userId === editUser.userId || u._id === editUser._id
+            ? updatedUser
+            : u
+        )
       );
+
+      toast.success("User updated successfully");
       setEditUser(null);
-      document.getElementById("closeEditDialogBtn").click();
+
+      const closeBtn = document.getElementById("closeEditDialogBtn");
+      if (closeBtn) closeBtn.click();
     } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error(error.response?.data?.message || "Failed to update user");
+      console.error("❌ Error updating user:", error);
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update user";
+      toast.error(msg);
     }
   };
 
@@ -218,8 +245,12 @@ export default function Users() {
                         <SelectContent>
                           <SelectItem value="Admin">IT</SelectItem>
                           <SelectItem value="Staff">Accounts</SelectItem>
-                          <SelectItem value="InventoryStaff">Inventory Staff</SelectItem>
-                          <SelectItem value="InventoryAdmin">Inventory Admin</SelectItem>
+                          <SelectItem value="InventoryStaff">
+                            Inventory Staff
+                          </SelectItem>
+                          <SelectItem value="InventoryAdmin">
+                            Inventory Admin
+                          </SelectItem>
                           <SelectItem value="Security">Security</SelectItem>
                         </SelectContent>
                       </Select>
