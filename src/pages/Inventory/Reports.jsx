@@ -37,7 +37,6 @@ export default function Reports() {
 
       // ✅ Build date range query
       let query = "";
-      z;
       if (from && to) {
         const fromDate = new Date(from);
         const toDate = new Date(to);
