@@ -39,8 +39,8 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All");
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -514,14 +514,16 @@ export default function Inventory() {
                 )}
               </div>
             </CardContent>
-            <div className="pt-4">
-              <Button
-                onClick={handleExportPDF}
-                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-              >
-                <Package className="w-4 h-4" />
-                Export as PDF
-              </Button>
+            <div className="md:col-span-2">
+              <div className="pt-4">
+                <Button
+                  onClick={handleExportPDF}
+                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  Export as PDF
+                </Button>
+              </div>
             </div>
           </Card>
 
