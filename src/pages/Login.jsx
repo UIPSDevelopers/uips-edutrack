@@ -112,28 +112,28 @@ export default function Login() {
           className="w-full max-w-sm bg-white/70 backdrop-blur-2xl border border-gray-200 rounded-3xl shadow-xl p-8 space-y-6"
         >
           {/* Header */}
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="text-center"
+            className="text-center space-y-2"
           >
-            <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-md border border-[#800000]/20">
-                <img
-                  src="/Edutrack.png" // 👈 file in public/
-                  alt="EduTrack logo"
-                  className="h-12 w-12 object-contain"
-                />
-              </div>
+            {/* Logo */}
+            <div className="flex justify-center mb-1">
+              <img
+                src="/edutrack.png"
+                alt="EduTrack Logo"
+                className="h-16 w-16 object-contain drop-shadow-md"
+              />
             </div>
 
-            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+            {/* Title */}
+            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
               UIPS EduTrack
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Academic Monitoring System
-            </p>
+
+            <p className="text-sm text-gray-500">Academic Monitoring System</p>
           </motion.div>
 
           {/* Session expired banner (inside card) */}
