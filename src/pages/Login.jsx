@@ -122,7 +122,7 @@ export default function Login() {
             {/* Logo */}
             <div className="flex justify-center mb-1">
               <img
-                src="/edutrack.png"
+                src="/Edutrack.png"
                 alt="EduTrack Logo"
                 className="h-16 w-16 object-contain drop-shadow-md"
               />
