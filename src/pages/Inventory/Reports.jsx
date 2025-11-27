@@ -22,22 +22,22 @@ export default function Reports() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
       let url = "";
 
-      if (type === "delivery")
-        url = `${API_BASE_URL}/reports/delivery`;
-      if (type === "checkout")
-        url = `${API_BASE_URL}/reports/checkout`;
+      if (type === "delivery") url = `${API_BASE_URL}/reports/delivery`;
+      if (type === "checkout") url = `${API_BASE_URL}/reports/checkout`;
+      if (type === "returns") url = `${API_BASE_URL}/reports/returns`;
       if (type === "summary") url = `${API_BASE_URL}/reports/summary`;
 
       // ✅ Build date range query
       let query = "";
+      z;
       if (from && to) {
         const fromDate = new Date(from);
         const toDate = new Date(to);
@@ -140,6 +140,7 @@ export default function Reports() {
                 >
                   <option value="delivery">Delivery Report</option>
                   <option value="checkout">Checkout Report</option>
+                  <option value="returns">Returns Report</option>
                   <option value="summary">Inventory Summary</option>
                 </select>
 
@@ -255,12 +256,16 @@ export default function Reports() {
 
                     {/* ✅ Totals for summary */}
                     {type === "summary" && totals && (
-                      <div className="mt-6 border-t pt-4 text-sm text-gray-700">
+                      <div className="mt-6 border-t pt-4 text-sm text-gray-700 space-y-1">
                         <p>
                           <span className="font-semibold">
                             Total Delivered:
                           </span>{" "}
                           {totals.totalDelivered}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Total Returned:</span>{" "}
+                          {totals.totalReturned ?? 0}
                         </p>
                         <p>
                           <span className="font-semibold">
