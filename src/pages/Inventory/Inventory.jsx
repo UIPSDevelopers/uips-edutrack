@@ -32,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import axiosInstance from "@/lib/axios"; // ✅ use shared axios instance
+import axiosInstance from "@/lib/axios";
 
 export default function Inventory() {
   const [items, setItems] = useState([]);
@@ -51,11 +51,11 @@ export default function Inventory() {
   });
   const [showDialog, setShowDialog] = useState(false);
 
-  // 🆕 Pagination state
+  // 🆕 Pagination state (limit = 0 means "All")
   const [page, setPage] = useState(1);
-  const [limit] = useState(20); // items per page
+  const [limit, setLimit] = useState(20); // 10 / 20 / 50 / 0("All")
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0); // overall count from backend
+  const [totalItems, setTotalItems] = useState(0);
 
   // 🔹 Sidebar control
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -84,7 +84,9 @@ export default function Inventory() {
   const canEditInventory = ["IT", "Accounts", "InventoryAdmin"].includes(role);
   const canDeleteInventory = ["IT", "InventoryAdmin"].includes(role);
 
-  // ✅ Fetch items (only if allowed) – using axiosInstance + pagination + search/filter
+  const isAll = limit === 0;
+
+  // ✅ Fetch items (only if allowed) – backend pagination + search/filter + all
   useEffect(() => {
     if (!canViewInventory) {
       setLoading(false);
@@ -99,18 +101,21 @@ export default function Inventory() {
       try {
         setLoading(true);
 
-        const res = await axiosInstance.get("/inventory", {
-          params: {
-            page,
-            limit,
-            search: searchTerm || undefined,
-            type: selectedType !== "All" ? selectedType : undefined,
-          },
-        });
+        const params = {
+          search: searchTerm || undefined,
+          type: selectedType !== "All" ? selectedType : undefined,
+        };
 
+        if (isAll) {
+          params.all = true;
+        } else {
+          params.page = page;
+          params.limit = limit;
+        }
+
+        const res = await axiosInstance.get("/inventory", { params });
         const data = res.data;
 
-        // Support both new (paginated) and old (array) responses gracefully
         const list = Array.isArray(data)
           ? data
           : Array.isArray(data.items)
@@ -135,15 +140,12 @@ export default function Inventory() {
     };
 
     fetchItems();
-  }, [canViewInventory, page, limit, searchTerm, selectedType]);
-
-  // ⛔️ NOTE: old client-side filter useEffect is no longer needed since
-  // we now filter via backend parameters, so it is removed.
+  }, [canViewInventory, page, limit, searchTerm, selectedType, isAll]);
 
   const totalQuantity = items.reduce((acc, i) => acc + (i.quantity || 0), 0);
 
   const handleEdit = (item) => {
-    if (!canEditInventory) return; // defensive
+    if (!canEditInventory) return;
     setEditingItem(item);
     setEditForm({
       itemName: item.itemName,
@@ -200,7 +202,7 @@ export default function Inventory() {
     }
   };
 
-  // ✅ Export PDF (uses current filtered list / page)
+  // ✅ Export PDF (current dataset – if limit=0, that's ALL)
   const handleExportPDF = async () => {
     if (filtered.length === 0) {
       alert("⚠️ No data to export.");
@@ -365,7 +367,7 @@ export default function Inventory() {
                 </div>
               </motion.div>
 
-              {/* Total Quantity (current page) */}
+              {/* Total Quantity (current dataset) */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
@@ -472,42 +474,66 @@ export default function Inventory() {
                   placeholder="Search item name..."
                   value={searchTerm}
                   onChange={(e) => {
-                    setPage(1); // 🆕 reset to first page when searching
+                    setPage(1);
                     setSearchTerm(e.target.value);
                   }}
                   className="h-10 w-full border-gray-300 focus:ring-2 focus:ring-[#800000]"
                 />
               </div>
 
-              <div className="w-full md:w-1/4">
-                <Select
-                  onValueChange={(val) => {
-                    setPage(1); // 🆕 reset page when changing filter
-                    setSelectedType(val);
-                  }}
-                  value={selectedType}
-                >
-                  <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
-                    <SelectValue placeholder="Filter by Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Types</SelectItem>
-                    <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
-                    <SelectItem value="Regular Uniform">
-                      Regular Uniform
-                    </SelectItem>
-                    <SelectItem value="Scouting">Scouting</SelectItem>
-                    <SelectItem value="School Supplies">
-                      School Supplies
-                    </SelectItem>
-                    <SelectItem value="Office Supplies">
-                      Office Supplies
-                    </SelectItem>
-                    <SelectItem value="Books">Books</SelectItem>
-                    <SelectItem value="Graduation">Graduation</SelectItem>
-                    <SelectItem value="Others">Others</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex gap-3 w-full md:w-auto">
+                <div className="w-1/2 md:w-48">
+                  <Select
+                    onValueChange={(val) => {
+                      setPage(1);
+                      setSelectedType(val);
+                    }}
+                    value={selectedType}
+                  >
+                    <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
+                      <SelectValue placeholder="Filter by Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Types</SelectItem>
+                      <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
+                      <SelectItem value="Regular Uniform">
+                        Regular Uniform
+                      </SelectItem>
+                      <SelectItem value="Scouting">Scouting</SelectItem>
+                      <SelectItem value="School Supplies">
+                        School Supplies
+                      </SelectItem>
+                      <SelectItem value="Office Supplies">
+                        Office Supplies
+                      </SelectItem>
+                      <SelectItem value="Books">Books</SelectItem>
+                      <SelectItem value="Graduation">Graduation</SelectItem>
+                      <SelectItem value="Others">Others</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 🆕 Rows per page */}
+                <div className="w-1/2 md:w-40">
+                  <Select
+                    value={isAll ? "0" : String(limit)}
+                    onValueChange={(val) => {
+                      const num = Number(val);
+                      setPage(1);
+                      setLimit(num); // 0 = All
+                    }}
+                  >
+                    <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
+                      <SelectValue placeholder="Rows per page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="20">20 / page</SelectItem>
+                      <SelectItem value="50">50 / page</SelectItem>
+                      <SelectItem value="0">All</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -554,7 +580,7 @@ export default function Inventory() {
                             className="border-b hover:bg-gray-50 transition"
                           >
                             <td className="p-3">
-                              {(page - 1) * limit + (i + 1)}
+                              {isAll ? i + 1 : (page - 1) * limit + (i + 1)}
                             </td>
                             <td className="p-3 font-medium text-[#800000]">
                               {item.itemId}
@@ -592,30 +618,35 @@ export default function Inventory() {
                   )}
                 </div>
 
-                {/* 🆕 Pagination controls */}
+                {/* Pagination / info */}
                 {!loading && filtered.length > 0 && (
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4 text-sm">
                     <span className="text-gray-500">
-                      Page {page} of {totalPages} • Total items: {totalItems}
+                      {isAll
+                        ? `Showing all ${totalItems} items`
+                        : `Page ${page} of ${totalPages} • Total items: ${totalItems}`}
                     </span>
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => p - 1)}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => p + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
+
+                    {!isAll && totalPages > 1 && (
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setPage((p) => p - 1)}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= totalPages}
+                          onClick={() => setPage((p) => p + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 
