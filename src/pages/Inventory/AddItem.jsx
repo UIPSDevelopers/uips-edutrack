@@ -108,161 +108,149 @@ export default function AddItem() {
   };
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <main className="p-6 space-y-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Add New Item
-            </h1>
+    <main className="p-6 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold text-gray-800">Add New Item</h1>
+      </div>
+
+      <InventoryTabs />
+
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-sm text-gray-500">
+            Item Information
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="grid md:grid-cols-2 gap-6">
+          {/* Item Type (Dropdown) */}
+          <div>
+            <label className="text-sm font-medium">Item Type</label>
+            <Select
+              onValueChange={(value) =>
+                setForm((prev) => ({ ...prev, itemType: value }))
+              }
+              value={form.itemType}
+            >
+              <SelectTrigger className="mt-1 h-10 w-full border border-gray-300 rounded-md px-3 text-sm focus:ring-2 focus:ring-[#800000] focus:outline-none">
+                <SelectValue placeholder="Select Item Type" />
+              </SelectTrigger>
+              <SelectContent className="text-sm">
+                <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
+                <SelectItem value="Regular Uniform">Regular Uniform</SelectItem>
+                <SelectItem value="Scouting">Scouting</SelectItem>
+                <SelectItem value="School Supplies">School Supplies</SelectItem>
+                <SelectItem value="Office Supplies">Office Supplies</SelectItem>
+                <SelectItem value="Books">Books</SelectItem>
+                <SelectItem value="Graduation">Graduation</SelectItem>
+                <SelectItem value="Others">Others</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <InventoryTabs />
+          {/* Item Name */}
+          <div>
+            <label className="text-sm font-medium">Item Name</label>
+            <Input
+              name="itemName"
+              placeholder="Enter item name"
+              value={form.itemName}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
 
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-sm text-gray-500">
-                Item Information
-              </CardTitle>
-            </CardHeader>
+          {/* Size / Source */}
+          <div>
+            <label className="text-sm font-medium">Size / Source</label>
+            <Input
+              name="sizeOrSource"
+              placeholder="Enter model, size or source"
+              value={form.sizeOrSource}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
 
-            <CardContent className="grid md:grid-cols-2 gap-6">
-              {/* Item Type (Dropdown) */}
-              <div>
-                <label className="text-sm font-medium">Item Type</label>
-                <Select
-                  onValueChange={(value) =>
-                    setForm((prev) => ({ ...prev, itemType: value }))
-                  }
-                  value={form.itemType}
-                >
-                  <SelectTrigger className="mt-1 h-10 w-full border border-gray-300 rounded-md px-3 text-sm focus:ring-2 focus:ring-[#800000] focus:outline-none">
-                    <SelectValue placeholder="Select Item Type" />
-                  </SelectTrigger>
-                  <SelectContent className="text-sm">
-                    <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
-                    <SelectItem value="Regular Uniform">
-                      Regular Uniform
-                    </SelectItem>
-                    <SelectItem value="Scouting">Scouting</SelectItem>
-                    <SelectItem value="School Supplies">
-                      School Supplies
-                    </SelectItem>
-                    <SelectItem value="Office Supplies">
-                      Office Supplies
-                    </SelectItem>
-                    <SelectItem value="Books">Books</SelectItem>
-                    <SelectItem value="Graduation">Graduation</SelectItem>
-                    <SelectItem value="Others">Others</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Barcode / Serial Number */}
+          <div>
+            <label className="text-sm font-medium">
+              Barcode / Serial Number
+            </label>
+            <div className="flex gap-2 mt-1">
+              <Input
+                name="barcode"
+                placeholder="Enter barcode or serial number"
+                value={form.barcode}
+                onChange={handleChange}
+              />
+              <Button
+                onClick={handleGenerateBarcode}
+                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+              >
+                <Barcode size={16} />
+                Generate
+              </Button>
+            </div>
+          </div>
 
-              {/* Item Name */}
-              <div>
-                <label className="text-sm font-medium">Item Name</label>
-                <Input
-                  name="itemName"
-                  placeholder="Enter item name"
-                  value={form.itemName}
-                  onChange={handleChange}
-                  className="mt-1"
+          {/* Added By */}
+          <div>
+            <label className="text-sm font-medium">Added By</label>
+            <Input
+              name="addedBy"
+              value={form.addedBy}
+              readOnly
+              className="mt-1 bg-gray-100"
+            />
+          </div>
+
+          {/* ✅ Barcode Preview + Print */}
+          {generatedBarcode && (
+            <div className="md:col-span-2 flex flex-col items-start mt-4 space-y-2">
+              <div
+                ref={printRef}
+                className="bg-white p-6 border rounded-md flex flex-col items-center justify-center w-[350px] mx-auto"
+                style={{
+                  textAlign: "center",
+                  pageBreakInside: "avoid",
+                }}
+              >
+                <BarcodeGenerator
+                  value={barcodeValue}
+                  format="CODE128"
+                  width={2}
+                  height={80}
+                  displayValue={true}
                 />
+                <p className="text-sm font-medium text-center mt-2">
+                  {form.itemName} — {form.sizeOrSource}
+                </p>
               </div>
 
-              {/* Size / Source */}
-              <div>
-                <label className="text-sm font-medium">Size / Source</label>
-                <Input
-                  name="sizeOrSource"
-                  placeholder="Enter model, size or source"
-                  value={form.sizeOrSource}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              </div>
+              {/* Print Button */}
+              <Button
+                onClick={handlePrintClick}
+                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+              >
+                <Printer size={16} />
+                Print Barcode
+              </Button>
+            </div>
+          )}
 
-              {/* Barcode / Serial Number */}
-              <div>
-                <label className="text-sm font-medium">
-                  Barcode / Serial Number
-                </label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    name="barcode"
-                    placeholder="Enter barcode or serial number"
-                    value={form.barcode}
-                    onChange={handleChange}
-                  />
-                  <Button
-                    onClick={handleGenerateBarcode}
-                    className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                  >
-                    <Barcode size={16} />
-                    Generate
-                  </Button>
-                </div>
-              </div>
-
-              {/* Added By */}
-              <div>
-                <label className="text-sm font-medium">Added By</label>
-                <Input
-                  name="addedBy"
-                  value={form.addedBy}
-                  readOnly
-                  className="mt-1 bg-gray-100"
-                />
-              </div>
-
-              {/* ✅ Barcode Preview + Print */}
-              {generatedBarcode && (
-                <div className="md:col-span-2 flex flex-col items-start mt-4 space-y-2">
-                  <div
-                    ref={printRef}
-                    className="bg-white p-6 border rounded-md flex flex-col items-center justify-center w-[350px] mx-auto"
-                    style={{
-                      textAlign: "center",
-                      pageBreakInside: "avoid",
-                    }}
-                  >
-                    <BarcodeGenerator
-                      value={barcodeValue}
-                      format="CODE128"
-                      width={2}
-                      height={80}
-                      displayValue={true}
-                    />
-                    <p className="text-sm font-medium text-center mt-2">
-                      {form.itemName} — {form.sizeOrSource}
-                    </p>
-                  </div>
-
-                  {/* Print Button */}
-                  <Button
-                    onClick={handlePrintClick}
-                    className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                  >
-                    <Printer size={16} />
-                    Print Barcode
-                  </Button>
-                </div>
-              )}
-
-              {/* Save Button */}
-              <div className="md:col-span-2">
-                <Button
-                  onClick={handleSave}
-                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                >
-                  <Save size={16} />
-                  Save Item
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    </div>
+          {/* Save Button */}
+          <div className="md:col-span-2">
+            <Button
+              onClick={handleSave}
+              className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+            >
+              <Save size={16} />
+              Save Item
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 }

@@ -337,230 +337,214 @@ export default function BulkImportItems() {
   // ---------- UI ----------
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <main className="p-6 space-y-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Bulk Import Items
-            </h1>
+    <main className="p-6 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold text-gray-800">
+          Bulk Import Items
+        </h1>
+      </div>
+
+      <InventoryTabs />
+
+      <Card className="border border-gray-200 shadow-sm mt-4">
+        <CardHeader>
+          <CardTitle className="text-sm text-gray-500 flex items-center gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Upload CSV / Excel File
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Instructions + template */}
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500">
+              Upload a <span className="font-mono">.csv, .xlsx, or .xls</span>{" "}
+              file with the following columns:
+            </p>
+            <div className="bg-gray-100 border border-gray-200 rounded-md p-2 text-[11px] font-mono text-gray-700">
+              itemType,itemName,sizeOrSource,barcode,quantity
+              <br />
+              P.E. Uniform,PE T-Shirt,Small,ITEM-000001,10
+              <br />
+              Regular Uniform,Formal Pants,Size 32,ITEM-000002,5
+            </div>
+            <p className="text-[11px] text-gray-500">
+              <b>Note:</b> <code>quantity</code> is optional. If omitted or
+              blank, it will be treated as <b>0</b>.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleDownloadTemplate}
+              className="mt-1 bg-white border text-xs flex items-center gap-1 hover:bg-gray-50 text-gray-700"
+            >
+              <Download className="w-3 h-3" />
+              Download Template (.xlsx)
+            </Button>
           </div>
 
-          <InventoryTabs />
+          {/* 🆕 Initial stock / delivery options */}
+          <div className="grid gap-2 sm:grid-cols-[auto,1fr] items-center border border-gray-200 rounded-md p-3 bg-gray-50">
+            <div className="flex items-center gap-2">
+              <input
+                id="createInitialDelivery"
+                type="checkbox"
+                className="h-4 w-4"
+                checked={createInitialDelivery}
+                onChange={(e) => setCreateInitialDelivery(e.target.checked)}
+              />
+              <label
+                htmlFor="createInitialDelivery"
+                className="text-xs text-gray-800"
+              >
+                Also create{" "}
+                <span className="font-semibold">Initial Stock-In</span> delivery
+                with these quantities
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 whitespace-nowrap">
+                Delivery No.
+              </span>
+              <Input
+                placeholder="e.g. INIT-2025-001"
+                value={deliveryNumber}
+                disabled={!createInitialDelivery}
+                onChange={(e) => setDeliveryNumber(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
 
-          <Card className="border border-gray-200 shadow-sm mt-4">
-            <CardHeader>
-              <CardTitle className="text-sm text-gray-500 flex items-center gap-2">
-                <FileSpreadsheet className="w-4 h-4" />
-                Upload CSV / Excel File
-              </CardTitle>
-            </CardHeader>
+          {/* File upload */}
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="cursor-pointer">
+              <Input
+                type="file"
+                accept=".csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-white text-sm hover:bg-gray-50">
+                <Upload className="w-4 h-4" />
+                Choose File
+              </span>
+            </label>
+            {fileName && (
+              <span className="text-xs text-gray-600 truncate max-w-xs">
+                Selected: <span className="font-medium">{fileName}</span>
+              </span>
+            )}
+          </div>
 
-            <CardContent className="space-y-4">
-              {/* Instructions + template */}
-              <div className="space-y-2">
-                <p className="text-xs text-gray-500">
-                  Upload a{" "}
-                  <span className="font-mono">.csv, .xlsx, or .xls</span> file
-                  with the following columns:
-                </p>
-                <div className="bg-gray-100 border border-gray-200 rounded-md p-2 text-[11px] font-mono text-gray-700">
-                  itemType,itemName,sizeOrSource,barcode,quantity
-                  <br />
-                  P.E. Uniform,PE T-Shirt,Small,ITEM-000001,10
-                  <br />
-                  Regular Uniform,Formal Pants,Size 32,ITEM-000002,5
+          {/* Error banner */}
+          {error && (
+            <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Import summary */}
+          {importSummary && (
+            <div className="text-xs bg-gray-50 border border-gray-200 rounded-md px-3 py-2 space-y-1">
+              <div className="flex items-center gap-1 text-gray-700">
+                <CheckCircle2 className="w-3 h-3" />
+                <span className="font-semibold">Import Summary</span>
+              </div>
+              <p>
+                Total rows sent:{" "}
+                <span className="font-medium">{importSummary.total}</span>
+              </p>
+              <p className="text-green-700">
+                Success:{" "}
+                <span className="font-medium">{importSummary.success}</span>
+              </p>
+              <p className="text-red-700">
+                Failed:{" "}
+                <span className="font-medium">{importSummary.failed}</span>
+              </p>
+              {importSummary.details?.length > 0 && (
+                <div className="mt-1 max-h-32 overflow-auto border-t border-gray-200 pt-1">
+                  {importSummary.details.map((d, i) => (
+                    <div key={i} className="mb-1">
+                      <span className="font-mono text-[11px] text-gray-600">
+                        Row {d.row || "?"} – {d.itemName} ({d.barcode}):
+                      </span>{" "}
+                      <span className="text-[11px] text-red-700">
+                        {d.error}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-[11px] text-gray-500">
-                  <b>Note:</b> <code>quantity</code> is optional. If omitted or
-                  blank, it will be treated as <b>0</b>.
+              )}
+            </div>
+          )}
+
+          {/* Preview table */}
+          {rows.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-600">
+                  Previewing{" "}
+                  <span className="font-semibold">{rows.length}</span> row(s)
+                  {rows.some((r) => r.__error)
+                    ? " (only failed rows are shown – fix and re-import)."
+                    : " ready for import."}
                 </p>
                 <Button
-                  type="button"
                   size="sm"
-                  onClick={handleDownloadTemplate}
-                  className="mt-1 bg-white border text-xs flex items-center gap-1 hover:bg-gray-50 text-gray-700"
+                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-1"
+                  onClick={handleImport}
+                  disabled={uploading}
                 >
-                  <Download className="w-3 h-3" />
-                  Download Template (.xlsx)
+                  <CheckCircle2 className="w-4 h-4" />
+                  {uploading ? "Importing..." : "Import Items"}
                 </Button>
               </div>
 
-              {/* 🆕 Initial stock / delivery options */}
-              <div className="grid gap-2 sm:grid-cols-[auto,1fr] items-center border border-gray-200 rounded-md p-3 bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="createInitialDelivery"
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={createInitialDelivery}
-                    onChange={(e) => setCreateInitialDelivery(e.target.checked)}
-                  />
-                  <label
-                    htmlFor="createInitialDelivery"
-                    className="text-xs text-gray-800"
-                  >
-                    Also create{" "}
-                    <span className="font-semibold">Initial Stock-In</span>{" "}
-                    delivery with these quantities
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600 whitespace-nowrap">
-                    Delivery No.
-                  </span>
-                  <Input
-                    placeholder="e.g. INIT-2025-001"
-                    value={deliveryNumber}
-                    disabled={!createInitialDelivery}
-                    onChange={(e) => setDeliveryNumber(e.target.value)}
-                    className="h-8 text-xs"
-                  />
-                </div>
+              <div className="border rounded-md overflow-auto max-h-80 text-xs">
+                <table className="min-w-full border-collapse">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="border px-2 py-1 text-left">#</th>
+                      <th className="border px-2 py-1 text-left">Item Type</th>
+                      <th className="border px-2 py-1 text-left">Item Name</th>
+                      <th className="border px-2 py-1 text-left">
+                        Size / Source
+                      </th>
+                      <th className="border px-2 py-1 text-left">Barcode</th>
+                      <th className="border px-2 py-1 text-left">Quantity</th>
+                      <th className="border px-2 py-1 text-left">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="border px-2 py-1">{idx + 1}</td>
+                        <td className="border px-2 py-1">{row.itemType}</td>
+                        <td className="border px-2 py-1">{row.itemName}</td>
+                        <td className="border px-2 py-1">{row.sizeOrSource}</td>
+                        <td className="border px-2 py-1">{row.barcode}</td>
+                        <td className="border px-2 py-1">
+                          {Number(row.quantity) || 0}
+                        </td>
+                        <td className="border px-2 py-1">
+                          {row.__error && (
+                            <span className="text-[11px] text-red-700">
+                              {row.__error}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              {/* File upload */}
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer">
-                  <Input
-                    type="file"
-                    accept=".csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <span className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-white text-sm hover:bg-gray-50">
-                    <Upload className="w-4 h-4" />
-                    Choose File
-                  </span>
-                </label>
-                {fileName && (
-                  <span className="text-xs text-gray-600 truncate max-w-xs">
-                    Selected: <span className="font-medium">{fileName}</span>
-                  </span>
-                )}
-              </div>
-
-              {/* Error banner */}
-              {error && (
-                <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                  <AlertTriangle className="w-4 h-4 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Import summary */}
-              {importSummary && (
-                <div className="text-xs bg-gray-50 border border-gray-200 rounded-md px-3 py-2 space-y-1">
-                  <div className="flex items-center gap-1 text-gray-700">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span className="font-semibold">Import Summary</span>
-                  </div>
-                  <p>
-                    Total rows sent:{" "}
-                    <span className="font-medium">{importSummary.total}</span>
-                  </p>
-                  <p className="text-green-700">
-                    Success:{" "}
-                    <span className="font-medium">{importSummary.success}</span>
-                  </p>
-                  <p className="text-red-700">
-                    Failed:{" "}
-                    <span className="font-medium">{importSummary.failed}</span>
-                  </p>
-                  {importSummary.details?.length > 0 && (
-                    <div className="mt-1 max-h-32 overflow-auto border-t border-gray-200 pt-1">
-                      {importSummary.details.map((d, i) => (
-                        <div key={i} className="mb-1">
-                          <span className="font-mono text-[11px] text-gray-600">
-                            Row {d.row || "?"} – {d.itemName} ({d.barcode}):
-                          </span>{" "}
-                          <span className="text-[11px] text-red-700">
-                            {d.error}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Preview table */}
-              {rows.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-600">
-                      Previewing{" "}
-                      <span className="font-semibold">{rows.length}</span>{" "}
-                      row(s)
-                      {rows.some((r) => r.__error)
-                        ? " (only failed rows are shown – fix and re-import)."
-                        : " ready for import."}
-                    </p>
-                    <Button
-                      size="sm"
-                      className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-1"
-                      onClick={handleImport}
-                      disabled={uploading}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      {uploading ? "Importing..." : "Import Items"}
-                    </Button>
-                  </div>
-
-                  <div className="border rounded-md overflow-auto max-h-80 text-xs">
-                    <table className="min-w-full border-collapse">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="border px-2 py-1 text-left">#</th>
-                          <th className="border px-2 py-1 text-left">
-                            Item Type
-                          </th>
-                          <th className="border px-2 py-1 text-left">
-                            Item Name
-                          </th>
-                          <th className="border px-2 py-1 text-left">
-                            Size / Source
-                          </th>
-                          <th className="border px-2 py-1 text-left">
-                            Barcode
-                          </th>
-                          <th className="border px-2 py-1 text-left">
-                            Quantity
-                          </th>
-                          <th className="border px-2 py-1 text-left">Error</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50">
-                            <td className="border px-2 py-1">{idx + 1}</td>
-                            <td className="border px-2 py-1">{row.itemType}</td>
-                            <td className="border px-2 py-1">{row.itemName}</td>
-                            <td className="border px-2 py-1">
-                              {row.sizeOrSource}
-                            </td>
-                            <td className="border px-2 py-1">{row.barcode}</td>
-                            <td className="border px-2 py-1">
-                              {Number(row.quantity) || 0}
-                            </td>
-                            <td className="border px-2 py-1">
-                              {row.__error && (
-                                <span className="text-[11px] text-red-700">
-                                  {row.__error}
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </main>
   );
 }

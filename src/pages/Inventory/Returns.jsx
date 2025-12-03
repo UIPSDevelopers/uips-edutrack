@@ -65,23 +65,19 @@ export default function Returns() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all">
-        <main className="p-6 space-y-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-              <PackageCheck className="h-6 w-6 text-[#800000]" />
-              Returns / Stock-In
-            </h1>
-          </div>
-
-          <InventoryTabs />
-
-          <ReturnForm />
-          <ReturnList />
-        </main>
+    <main className="p-6 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+          <PackageCheck className="h-6 w-6 text-[#800000]" />
+          Returns / Stock-In
+        </h1>
       </div>
-    </div>
+
+      <InventoryTabs />
+
+      <ReturnForm />
+      <ReturnList />
+    </main>
   );
 }
 

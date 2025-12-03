@@ -156,8 +156,7 @@ export default function Users() {
   };
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300 relative">
+    <>
         {/* 🚫 Unauthorized overlay (IT-only) */}
         {!canAccessUsers && (
           <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-50">
@@ -504,7 +503,6 @@ export default function Users() {
             </Card>
           </motion.div>
         </main>
-      </div>
-    </div>
+    </>
   );
 }

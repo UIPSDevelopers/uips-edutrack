@@ -432,299 +432,289 @@ export default function Inventory() {
   };
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <main className="p-6 space-y-8 relative">
-          {/* 🔹 Everything inside this wrapper will blur if unauthorized */}
-          <div
-            className={
-              canViewInventory
-                ? "space-y-8"
-                : "space-y-8 pointer-events-none blur-sm opacity-60 select-none"
-            }
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-2xl font-semibold text-gray-800">
-                Inventory
-              </h1>
+    <main className="p-6 space-y-8 relative">
+      {/* 🔹 Everything inside this wrapper will blur if unauthorized */}
+      <div
+        className={
+          canViewInventory
+            ? "space-y-8"
+            : "space-y-8 pointer-events-none blur-sm opacity-60 select-none"
+        }
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-semibold text-gray-800">Inventory</h1>
+        </div>
+
+        <InventoryTabs />
+
+        {role === "InventoryStaff" && (
+          <Card className="border border-amber-200 bg-amber-50">
+            <CardContent className="py-3 text-xs text-amber-800">
+              You have <span className="font-semibold">limited access</span> to
+              Inventory. You can view records but you{" "}
+              <span className="font-semibold">cannot edit or delete</span>{" "}
+              existing data.
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Filter + Search */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-2 w-full md:w-1/3">
+            <Search className="w-4 h-4 text-gray-500" />
+            <Input
+              placeholder="Search item name..."
+              value={searchTerm}
+              onChange={(e) => {
+                setPage(1);
+                setSearchTerm(e.target.value);
+              }}
+              className="h-10 w-full border-gray-300 focus:ring-2 focus:ring-[#800000]"
+            />
+          </div>
+
+          <div className="flex gap-3 w-full md:w-auto">
+            <div className="w-1/2 md:w-48">
+              <Select
+                onValueChange={(val) => {
+                  setPage(1);
+                  setSelectedType(val);
+                }}
+                value={selectedType}
+              >
+                <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
+                  <SelectValue placeholder="Filter by Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Types</SelectItem>
+                  <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
+                  <SelectItem value="Regular Uniform">
+                    Regular Uniform
+                  </SelectItem>
+                  <SelectItem value="Scouting">Scouting</SelectItem>
+                  <SelectItem value="School Supplies">
+                    School Supplies
+                  </SelectItem>
+                  <SelectItem value="Office Supplies">
+                    Office Supplies
+                  </SelectItem>
+                  <SelectItem value="Books">Books</SelectItem>
+                  <SelectItem value="Graduation">Graduation</SelectItem>
+                  <SelectItem value="Others">Others</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <InventoryTabs />
-
-            {role === "InventoryStaff" && (
-              <Card className="border border-amber-200 bg-amber-50">
-                <CardContent className="py-3 text-xs text-amber-800">
-                  You have <span className="font-semibold">limited access</span>{" "}
-                  to Inventory. You can view records but you{" "}
-                  <span className="font-semibold">cannot edit or delete</span>{" "}
-                  existing data.
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Filter + Search */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div className="flex items-center gap-2 w-full md:w-1/3">
-                <Search className="w-4 h-4 text-gray-500" />
-                <Input
-                  placeholder="Search item name..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setPage(1);
-                    setSearchTerm(e.target.value);
-                  }}
-                  className="h-10 w-full border-gray-300 focus:ring-2 focus:ring-[#800000]"
-                />
-              </div>
-
-              <div className="flex gap-3 w-full md:w-auto">
-                <div className="w-1/2 md:w-48">
-                  <Select
-                    onValueChange={(val) => {
-                      setPage(1);
-                      setSelectedType(val);
-                    }}
-                    value={selectedType}
-                  >
-                    <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
-                      <SelectValue placeholder="Filter by Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Types</SelectItem>
-                      <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
-                      <SelectItem value="Regular Uniform">
-                        Regular Uniform
-                      </SelectItem>
-                      <SelectItem value="Scouting">Scouting</SelectItem>
-                      <SelectItem value="School Supplies">
-                        School Supplies
-                      </SelectItem>
-                      <SelectItem value="Office Supplies">
-                        Office Supplies
-                      </SelectItem>
-                      <SelectItem value="Books">Books</SelectItem>
-                      <SelectItem value="Graduation">Graduation</SelectItem>
-                      <SelectItem value="Others">Others</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Rows per page */}
-                <div className="w-1/2 md:w-40">
-                  <Select
-                    value={isAll ? "0" : String(limit)}
-                    onValueChange={(val) => {
-                      const num = Number(val);
-                      setPage(1);
-                      setLimit(num); // 0 = All
-                    }}
-                  >
-                    <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
-                      <SelectValue placeholder="Rows per page" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10 / page</SelectItem>
-                      <SelectItem value="20">20 / page</SelectItem>
-                      <SelectItem value="50">50 / page</SelectItem>
-                      <SelectItem value="0">All</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+            {/* Rows per page */}
+            <div className="w-1/2 md:w-40">
+              <Select
+                value={isAll ? "0" : String(limit)}
+                onValueChange={(val) => {
+                  const num = Number(val);
+                  setPage(1);
+                  setLimit(num); // 0 = All
+                }}
+              >
+                <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
+                  <SelectValue placeholder="Rows per page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 / page</SelectItem>
+                  <SelectItem value="20">20 / page</SelectItem>
+                  <SelectItem value="50">50 / page</SelectItem>
+                  <SelectItem value="0">All</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+        </div>
 
-            {/* Table */}
-            <Card className="shadow-sm border border-gray-200 mt-4">
-              <CardHeader>
-                <CardTitle className="text-sm text-gray-500">
-                  List of Inventory Items
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* TOP: Pagination info */}
-                {!loading && filtered.length > 0 && (
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 text-sm">
-                    <span className="text-gray-500">
-                      {isAll
-                        ? `Showing all ${totalItems} items (Qty: ${totalQuantity})`
-                        : `Page ${page} of ${totalPages} • Total items: ${totalItems} • Qty on this page: ${totalQuantity}`}
-                    </span>
+        {/* Table */}
+        <Card className="shadow-sm border border-gray-200 mt-4">
+          <CardHeader>
+            <CardTitle className="text-sm text-gray-500">
+              List of Inventory Items
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* TOP: Pagination info */}
+            {!loading && filtered.length > 0 && (
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 text-sm">
+                <span className="text-gray-500">
+                  {isAll
+                    ? `Showing all ${totalItems} items (Qty: ${totalQuantity})`
+                    : `Page ${page} of ${totalPages} • Total items: ${totalItems} • Qty on this page: ${totalQuantity}`}
+                </span>
 
-                    {!isAll && totalPages > 1 && (
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page <= 1}
-                          onClick={() => setPage((p) => p - 1)}
-                        >
-                          Previous
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage((p) => p + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* TOP: Export Buttons */}
-                {!loading && filtered.length > 0 && (
-                  <div className="flex flex-wrap gap-3 mb-4">
+                {!isAll && totalPages > 1 && (
+                  <div className="flex gap-2 justify-end">
                     <Button
-                      onClick={handleExportPDF}
-                      className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => p - 1)}
                     >
-                      <Package className="w-4 h-4" />
-                      Export (This View)
+                      Previous
                     </Button>
 
                     <Button
                       variant="outline"
-                      onClick={handleExportAllPDF}
-                      className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((p) => p + 1)}
                     >
-                      <Package className="w-4 h-4" />
-                      Export ALL
+                      Next
                     </Button>
                   </div>
                 )}
-
-                <div className="overflow-x-auto">
-                  {loading ? (
-                    <p className="text-center text-gray-500 py-6">
-                      Loading items...
-                    </p>
-                  ) : filtered.length === 0 ? (
-                    <p className="text-center text-gray-500 py-6">
-                      No matching items found.
-                    </p>
-                  ) : (
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100 text-gray-700 text-left">
-                          <th className="p-3 font-medium">#</th>
-                          <th className="p-3 font-medium">Item ID</th>
-                          <th className="p-3 font-medium">Item Name</th>
-                          <th className="p-3 font-medium">Type</th>
-                          <th className="p-3 font-medium">Size / Source</th>
-                          <th className="p-3 font-medium">Barcode / Serial</th>
-                          <th className="p-3 font-medium text-center">
-                            Quantity
-                          </th>
-                          <th className="p-3 font-medium">Added By</th>
-                          <th className="p-3 font-medium text-right">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.map((item, i) => (
-                          <tr
-                            key={item.itemId}
-                            className="border-b hover:bg-gray-50 transition"
-                          >
-                            <td className="p-3">
-                              {isAll ? i + 1 : (page - 1) * limit + (i + 1)}
-                            </td>
-                            <td className="p-3 font-medium text-[#800000]">
-                              {item.itemId}
-                            </td>
-                            <td className="p-3">{item.itemName}</td>
-                            <td className="p-3">{item.itemType}</td>
-                            <td className="p-3">{item.sizeOrSource || "-"}</td>
-                            <td className="p-3">{item.barcode}</td>
-                            <td className="p-3 text-center font-semibold">
-                              {item.quantity ?? 0}
-                            </td>
-                            <td className="p-3">{item.addedBy}</td>
-                            <td className="p-3 text-right text-gray-500 space-x-3">
-                              {canEditInventory && (
-                                <button
-                                  onClick={() => handleEdit(item)}
-                                  className="hover:text-blue-600 transition"
-                                >
-                                  Edit
-                                </button>
-                              )}
-                              {canDeleteInventory && (
-                                <button
-                                  onClick={() => handleDelete(item.itemId)}
-                                  className="hover:text-red-600 transition"
-                                >
-                                  Delete
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* ✏️ Edit Item Modal */}
-            <Dialog open={showDialog} onOpenChange={setShowDialog}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Edit Item</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 mt-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Item Name
-                  </label>
-                  <Input
-                    name="itemName"
-                    placeholder="Item Name"
-                    value={editForm.itemName}
-                    onChange={handleEditChange}
-                  />
-                  <label className="text-sm font-medium text-gray-700">
-                    Quantity
-                  </label>
-                  <Input
-                    name="quantity"
-                    type="number"
-                    value={editForm.quantity}
-                    onChange={handleEditChange}
-                  />
-                  <Button
-                    onClick={handleUpdate}
-                    className="w-full bg-[#800000] hover:bg-[#a10000] text-white"
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* 🚫 Unauthorized Overlay */}
-          {!canViewInventory && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/30">
-              <div className="bg-white/90 backdrop-blur-xl border border-red-200 rounded-2xl shadow-xl px-8 py-6 max-w-md text-center">
-                <Ban className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                <h2 className="text-lg font-semibold text-gray-800 mb-1">
-                  Unauthorized Access
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Your role does not have permission to access the Inventory
-                  module. Please contact IT or the system administrator if you
-                  believe this is a mistake.
-                </p>
               </div>
+            )}
+
+            {/* TOP: Export Buttons */}
+            {!loading && filtered.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-4">
+                <Button
+                  onClick={handleExportPDF}
+                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  Export (This View)
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleExportAllPDF}
+                  className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
+                >
+                  <Package className="w-4 h-4" />
+                  Export ALL
+                </Button>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              {loading ? (
+                <p className="text-center text-gray-500 py-6">
+                  Loading items...
+                </p>
+              ) : filtered.length === 0 ? (
+                <p className="text-center text-gray-500 py-6">
+                  No matching items found.
+                </p>
+              ) : (
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-700 text-left">
+                      <th className="p-3 font-medium">#</th>
+                      <th className="p-3 font-medium">Item ID</th>
+                      <th className="p-3 font-medium">Item Name</th>
+                      <th className="p-3 font-medium">Type</th>
+                      <th className="p-3 font-medium">Size / Source</th>
+                      <th className="p-3 font-medium">Barcode / Serial</th>
+                      <th className="p-3 font-medium text-center">Quantity</th>
+                      <th className="p-3 font-medium">Added By</th>
+                      <th className="p-3 font-medium text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((item, i) => (
+                      <tr
+                        key={item.itemId}
+                        className="border-b hover:bg-gray-50 transition"
+                      >
+                        <td className="p-3">
+                          {isAll ? i + 1 : (page - 1) * limit + (i + 1)}
+                        </td>
+                        <td className="p-3 font-medium text-[#800000]">
+                          {item.itemId}
+                        </td>
+                        <td className="p-3">{item.itemName}</td>
+                        <td className="p-3">{item.itemType}</td>
+                        <td className="p-3">{item.sizeOrSource || "-"}</td>
+                        <td className="p-3">{item.barcode}</td>
+                        <td className="p-3 text-center font-semibold">
+                          {item.quantity ?? 0}
+                        </td>
+                        <td className="p-3">{item.addedBy}</td>
+                        <td className="p-3 text-right text-gray-500 space-x-3">
+                          {canEditInventory && (
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="hover:text-blue-600 transition"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {canDeleteInventory && (
+                            <button
+                              onClick={() => handleDelete(item.itemId)}
+                              className="hover:text-red-600 transition"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-          )}
-        </main>
+          </CardContent>
+        </Card>
+
+        {/* ✏️ Edit Item Modal */}
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Item</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              <label className="text-sm font-medium text-gray-700">
+                Item Name
+              </label>
+              <Input
+                name="itemName"
+                placeholder="Item Name"
+                value={editForm.itemName}
+                onChange={handleEditChange}
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Quantity
+              </label>
+              <Input
+                name="quantity"
+                type="number"
+                value={editForm.quantity}
+                onChange={handleEditChange}
+              />
+              <Button
+                onClick={handleUpdate}
+                className="w-full bg-[#800000] hover:bg-[#a10000] text-white"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
+
+      {/* 🚫 Unauthorized Overlay */}
+      {!canViewInventory && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/30">
+          <div className="bg-white/90 backdrop-blur-xl border border-red-200 rounded-2xl shadow-xl px-8 py-6 max-w-md text-center">
+            <Ban className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">
+              Unauthorized Access
+            </h2>
+            <p className="text-sm text-gray-600">
+              Your role does not have permission to access the Inventory module.
+              Please contact IT or the system administrator if you believe this
+              is a mistake.
+            </p>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }

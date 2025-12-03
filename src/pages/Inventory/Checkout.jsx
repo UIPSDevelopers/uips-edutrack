@@ -153,188 +153,184 @@ export default function Checkout() {
   };
 
   return (
-    <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        <main className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Checkout / Stock-Out
-            </h1>
+    <main className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold text-gray-800">
+          Checkout / Stock-Out
+        </h1>
+      </div>
+
+      <InventoryTabs />
+
+      <Card className="border border-gray-200 shadow-sm rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-[#800000]">
+            Checkout Transaction
+          </CardTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Scan or manually enter barcodes for items being issued.
+          </p>
+        </CardHeader>
+
+        <CardContent className="space-y-5">
+          {/* Checkout ID */}
+          {checkoutId && (
+            <div className="w-full md:w-1/3">
+              <label className="text-sm font-medium text-gray-700">
+                Checkout ID
+              </label>
+              <Input
+                value={checkoutId}
+                readOnly
+                className="bg-gray-100 text-gray-700 mt-1"
+              />
+            </div>
+          )}
+
+          {/* Transaction Number */}
+          {transactionNo && (
+            <div className="w-full md:w-1/3">
+              <label className="text-sm font-medium text-gray-700">
+                Transaction Number
+              </label>
+              <Input
+                value={transactionNo}
+                readOnly
+                className="bg-gray-100 text-gray-700 mt-1"
+              />
+            </div>
+          )}
+
+          {/* Issued By */}
+          <div className="w-full md:w-1/3">
+            <label className="text-sm font-medium text-gray-700">
+              Issued By
+            </label>
+            <Input
+              value={issuedBy}
+              disabled
+              className="bg-gray-100 text-gray-700 mt-1"
+            />
           </div>
 
-          <InventoryTabs />
+          {/* Barcode Input */}
+          <div className="flex flex-wrap items-center gap-3 mt-4 max-w-lg">
+            <Input
+              ref={barcodeInputRef}
+              placeholder="Scan or enter barcode"
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              onKeyDown={handleKeyPress}
+              autoFocus
+              className="border-gray-300 focus:ring-2 focus:ring-[#800000]"
+            />
+            <Button
+              onClick={handleAdd}
+              className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+            >
+              <ScanLine size={16} />
+              Add
+            </Button>
+          </div>
 
-          <Card className="border border-gray-200 shadow-sm rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-[#800000]">
-                Checkout Transaction
-              </CardTitle>
-              <p className="text-sm text-gray-500 mt-1">
-                Scan or manually enter barcodes for items being issued.
-              </p>
-            </CardHeader>
+          {/* Table */}
+          {items.length > 0 ? (
+            <div className="overflow-x-auto rounded-md border border-gray-200 mt-4">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100 text-gray-700">
+                  <tr>
+                    <th className="p-3 text-left">#</th>
+                    <th className="p-3 text-left">Item Name</th>
+                    <th className="p-3 text-left">Type</th>
+                    <th className="p-3 text-left">Barcode</th>
+                    <th className="p-3 text-center">Qty</th>
+                    <th className="p-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, i) => (
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3">{i + 1}</td>
+                      <td className="p-3 font-medium text-gray-800">
+                        {item.itemName}
+                      </td>
+                      <td className="p-3">{item.itemType}</td>
+                      <td className="p-3 text-gray-600">{item.barcode}</td>
+                      <td className="p-3 text-center font-semibold text-[#800000]">
+                        {item.qty}
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => handleRemove(item.barcode)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-6">
+              No items scanned yet.
+            </p>
+          )}
 
-            <CardContent className="space-y-5">
-              {/* Checkout ID */}
-              {checkoutId && (
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Checkout ID
-                  </label>
-                  <Input
-                    value={checkoutId}
-                    readOnly
-                    className="bg-gray-100 text-gray-700 mt-1"
-                  />
-                </div>
-              )}
+          {/* Finalize Button */}
+          <div className="pt-4 flex justify-center">
+            <Button
+              onClick={openFinalizeModal}
+              disabled={items.length === 0}
+              className="bg-[#800000] hover:bg-[#a10000] text-white px-6 py-5 text-base font-medium rounded-xl shadow-sm transition-transform hover:scale-[1.02]"
+            >
+              <ReceiptText size={18} className="mr-2" />
+              Finalize Checkout
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* Transaction Number */}
-              {transactionNo && (
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Transaction Number
-                  </label>
-                  <Input
-                    value={transactionNo}
-                    readOnly
-                    className="bg-gray-100 text-gray-700 mt-1"
-                  />
-                </div>
-              )}
+      {/* Finalize Modal */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Finalize Checkout</DialogTitle>
+            <p className="text-sm text-gray-500">
+              Please enter the receipt number for this transaction.
+            </p>
+          </DialogHeader>
 
-              {/* Issued By */}
-              <div className="w-full md:w-1/3">
-                <label className="text-sm font-medium text-gray-700">
-                  Issued By
-                </label>
-                <Input
-                  value={issuedBy}
-                  disabled
-                  className="bg-gray-100 text-gray-700 mt-1"
-                />
-              </div>
+          <div className="space-y-3 mt-2">
+            <label className="text-sm font-medium text-gray-700">
+              Receipt Number
+            </label>
+            <Input
+              placeholder="Enter receipt number"
+              value={receiptNo}
+              onChange={(e) => setReceiptNo(e.target.value)}
+            />
+          </div>
 
-              {/* Barcode Input */}
-              <div className="flex flex-wrap items-center gap-3 mt-4 max-w-lg">
-                <Input
-                  ref={barcodeInputRef}
-                  placeholder="Scan or enter barcode"
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  autoFocus
-                  className="border-gray-300 focus:ring-2 focus:ring-[#800000]"
-                />
-                <Button
-                  onClick={handleAdd}
-                  className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                >
-                  <ScanLine size={16} />
-                  Add
-                </Button>
-              </div>
-
-              {/* Table */}
-              {items.length > 0 ? (
-                <div className="overflow-x-auto rounded-md border border-gray-200 mt-4">
-                  <table className="w-full text-sm border-collapse">
-                    <thead className="bg-gray-100 text-gray-700">
-                      <tr>
-                        <th className="p-3 text-left">#</th>
-                        <th className="p-3 text-left">Item Name</th>
-                        <th className="p-3 text-left">Type</th>
-                        <th className="p-3 text-left">Barcode</th>
-                        <th className="p-3 text-center">Qty</th>
-                        <th className="p-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((item, i) => (
-                        <tr key={item.id} className="border-b hover:bg-gray-50">
-                          <td className="p-3">{i + 1}</td>
-                          <td className="p-3 font-medium text-gray-800">
-                            {item.itemName}
-                          </td>
-                          <td className="p-3">{item.itemType}</td>
-                          <td className="p-3 text-gray-600">{item.barcode}</td>
-                          <td className="p-3 text-center font-semibold text-[#800000]">
-                            {item.qty}
-                          </td>
-                          <td className="p-3 text-right">
-                            <button
-                              onClick={() => handleRemove(item.barcode)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-center text-gray-500 py-6">
-                  No items scanned yet.
-                </p>
-              )}
-
-              {/* Finalize Button */}
-              <div className="pt-4 flex justify-center">
-                <Button
-                  onClick={openFinalizeModal}
-                  disabled={items.length === 0}
-                  className="bg-[#800000] hover:bg-[#a10000] text-white px-6 py-5 text-base font-medium rounded-xl shadow-sm transition-transform hover:scale-[1.02]"
-                >
-                  <ReceiptText size={18} className="mr-2" />
-                  Finalize Checkout
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Finalize Modal */}
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Finalize Checkout</DialogTitle>
-                <p className="text-sm text-gray-500">
-                  Please enter the receipt number for this transaction.
-                </p>
-              </DialogHeader>
-
-              <div className="space-y-3 mt-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Receipt Number
-                </label>
-                <Input
-                  placeholder="Enter receipt number"
-                  value={receiptNo}
-                  onChange={(e) => setReceiptNo(e.target.value)}
-                />
-              </div>
-
-              <DialogFooter className="mt-5">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDialog(false)}
-                  className="mr-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleConfirmCheckout}
-                  className="bg-[#800000] hover:bg-[#a10000] text-white"
-                >
-                  Confirm Checkout
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </main>
-      </div>
-    </div>
+          <DialogFooter className="mt-5">
+            <Button
+              variant="outline"
+              onClick={() => setShowDialog(false)}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmCheckout}
+              className="bg-[#800000] hover:bg-[#a10000] text-white"
+            >
+              Confirm Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </main>
   );
 }
