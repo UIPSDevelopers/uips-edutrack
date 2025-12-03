@@ -34,7 +34,7 @@ export default function Users() {
     firstname: "",
     lastname: "",
     email: "",
-    role: "Staff",
+    role: "InventoryStaff",
     password: "",
   });
 
@@ -101,7 +101,7 @@ export default function Users() {
         firstname: "",
         lastname: "",
         email: "",
-        role: "Staff",
+        role: "InventoryStaff",
         password: "",
       });
       document.getElementById("closeAddDialogBtn")?.click();
@@ -284,7 +284,6 @@ export default function Users() {
                             Inventory Admin
                           </SelectItem>
                           <SelectItem value="Security">Security</SelectItem>
-                          <SelectItem value="Staff">Staff</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -457,9 +456,6 @@ export default function Users() {
                                           </SelectItem>
                                           <SelectItem value="Security">
                                             Security
-                                          </SelectItem>
-                                          <SelectItem value="Staff">
-                                            Staff
                                           </SelectItem>
                                         </SelectContent>
                                       </Select>
