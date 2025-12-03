@@ -16,6 +16,7 @@ import {
 import { PackagePlus, ScanLine } from "lucide-react";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import { getCurrentUser } from "@/lib/getCurrentUser";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
 export default function Delivery() {
   const [scanned, setScanned] = useState([]);
@@ -26,8 +27,6 @@ export default function Delivery() {
   const [deliveryNumber, setDeliveryNumber] = useState("");
   const [supplier, setSupplier] = useState("");
   const barcodeInputRef = useRef(null);
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 
   // ✅ Sidebar state (for mobile)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,17 +43,15 @@ export default function Delivery() {
     barcodeInputRef.current?.focus();
   }, []);
 
-  // 🔍 Add item by barcode
+  // 🔍 Add item by barcode (axios)
   const handleAdd = async () => {
     if (!barcode.trim()) return;
 
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/inventory/barcode/${barcode}`
-      );
-      const data = await res.json();
+      const res = await axiosInstance.get(`/inventory/barcode/${barcode}`);
+      const data = res.data;
 
-      if (!res.ok || !data.item) {
+      if (!data.item) {
         alert("❌ Item not found in inventory.");
         return;
       }
@@ -90,7 +87,10 @@ export default function Delivery() {
       barcodeInputRef.current?.focus();
     } catch (error) {
       console.error("Error fetching item:", error);
-      alert("⚠️ Unable to fetch item. Please check your connection.");
+      const msg =
+        error.response?.data?.message ||
+        "⚠️ Unable to fetch item. Please check your connection.";
+      alert(msg);
     }
   };
 
@@ -111,7 +111,7 @@ export default function Delivery() {
     setShowDialog(true);
   };
 
-  // ✅ Confirm finalize
+  // ✅ Confirm finalize (axios)
   const handleConfirmFinalize = async () => {
     if (!deliveryNumber.trim()) {
       alert("⚠️ Delivery number is required.");
@@ -133,26 +133,20 @@ export default function Delivery() {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/delivery/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await axiosInstance.post("/delivery/add", payload);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok) {
-        alert(`✅ Delivery saved!\nDelivery ID: ${data.delivery?.deliveryId}`);
-        setScanned([]);
-        setDeliveryNumber("");
-        setSupplier("");
-        setShowDialog(false);
-      } else {
-        alert(`❌ ${data.message}`);
-      }
+      alert(`✅ Delivery saved!\nDelivery ID: ${data.delivery?.deliveryId}`);
+      setScanned([]);
+      setDeliveryNumber("");
+      setSupplier("");
+      setShowDialog(false);
     } catch (error) {
       console.error("Error saving delivery:", error);
-      alert("⚠️ Failed to save delivery. Please try again.");
+      const msg =
+        error.response?.data?.message ||
+        "⚠️ Failed to save delivery. Please try again.";
+      alert(msg);
     }
   };
 
