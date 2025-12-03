@@ -349,7 +349,7 @@ export default function BulkImportItems() {
                   type="button"
                   size="sm"
                   onClick={handleDownloadTemplate}
-                  className="mt-1 bg-white border text-xs flex items-center gap-1 hover:bg-gray-50"
+                  className="mt-1 bg-white border text-xs flex items-center gap-1 hover:bg-gray-50 text-gray-700"
                 >
                   <Download className="w-3 h-3" />
                   Download Template (.xlsx)
