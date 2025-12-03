@@ -25,13 +25,8 @@ const navItems = [
 export default function Sidebar({ isOpen, onClose }) {
   return (
     <>
-      {/* Desktop Sidebar */}
-      <motion.aside
-        initial={{ x: -80, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="hidden md:flex flex-col w-64 h-screen bg-[#800000] text-white p-6 space-y-6 fixed left-0 top-0 shadow-xl"
-      >
+      {/* Desktop Sidebar (no animation so it doesn't re-slide every route change) */}
+      <aside className="hidden md:flex flex-col w-64 h-screen bg-[#800000] text-white p-6 space-y-6 fixed left-0 top-0 shadow-xl">
         <div className="text-2xl font-semibold tracking-tight">
           UIPS EduTrack
         </div>
@@ -59,7 +54,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="mt-auto text-xs text-gray-300">
           © 2025 UIPS EduTrack
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Mobile Sidebar */}
       <AnimatePresence>
