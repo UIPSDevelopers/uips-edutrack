@@ -25,8 +25,12 @@ export default function BulkImportItems() {
   const [uploading, setUploading] = useState(false);
   const [importSummary, setImportSummary] = useState(null);
 
+  // 🆕 For initial inventory / delivery
+  const [deliveryNumber, setDeliveryNumber] = useState("");
+  const [createInitialDelivery, setCreateInitialDelivery] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
-  const requiredHeaders = ["itemType", "itemName", "sizeOrSource", "barcode"];
+  const requiredHeaders = ["itemType", "itemName", "sizeOrSource", "barcode"]; // quantity is optional
 
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -45,6 +49,12 @@ export default function BulkImportItems() {
         lowerMap[k.toLowerCase()] = row[k];
       });
 
+      const quantityRaw = lowerMap["quantity"];
+      const quantity =
+        quantityRaw === undefined || quantityRaw === null || quantityRaw === ""
+          ? 0
+          : Number(quantityRaw) || 0;
+
       return {
         __row: idx + 2, // Excel row number (approx)
         itemType: lowerMap["itemtype"] || "",
@@ -52,6 +62,7 @@ export default function BulkImportItems() {
         sizeOrSource:
           lowerMap["sizeorsource"] || lowerMap["size / source"] || "",
         barcode: lowerMap["barcode"] || "",
+        quantity,
       };
     });
 
@@ -92,9 +103,17 @@ export default function BulkImportItems() {
       idx[h] = i;
     });
 
+    const quantityIndex = headers.indexOf("quantity");
+
     const dataRows = lines.slice(1).map((line, lineIndex) => {
       const cols = line.split(",").map((c) => c.trim());
       if (cols.length === 1 && cols[0] === "") return null;
+
+      let quantity = 0;
+      if (quantityIndex !== -1) {
+        const qRaw = cols[quantityIndex] || "";
+        quantity = qRaw === "" ? 0 : Number(qRaw) || 0;
+      }
 
       return {
         __row: lineIndex + 2,
@@ -102,6 +121,7 @@ export default function BulkImportItems() {
         itemName: cols[idx.itemName] || "",
         sizeOrSource: cols[idx.sizeOrSource] || "",
         barcode: cols[idx.barcode] || "",
+        quantity,
       };
     });
 
@@ -142,9 +162,9 @@ export default function BulkImportItems() {
 
   const handleDownloadTemplate = () => {
     const wsData = [
-      ["itemType", "itemName", "sizeOrSource", "barcode"],
-      ["P.E. Uniform", "PE T-Shirt", "Small", "ITEM-000001"],
-      ["Regular Uniform", "Formal Pants", "Size 32", "ITEM-000002"],
+      ["itemType", "itemName", "sizeOrSource", "barcode", "quantity"],
+      ["P.E. Uniform", "PE T-Shirt", "Small", "ITEM-000001", 10],
+      ["Regular Uniform", "Formal Pants", "Size 32", "ITEM-000002", 5],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -225,13 +245,21 @@ export default function BulkImportItems() {
         itemName: r.itemName,
         sizeOrSource: r.sizeOrSource,
         barcode: r.barcode,
+        quantity: Number(r.quantity) || 0,
         addedBy,
       }));
 
-      // ✅ axiosInstance automatically attaches Authorization: Bearer <token>
-      const { data } = await axiosInstance.post("/inventory/bulk-add", {
+      // 🆕 extra payload fields for initial delivery
+      const payload = {
         items: payloadItems,
-      });
+        createInitialDelivery,
+        deliveryNumber: createInitialDelivery
+          ? deliveryNumber.trim() || null
+          : null,
+      };
+
+      // ✅ axiosInstance automatically attaches Authorization: Bearer <token>
+      const { data } = await axiosInstance.post("/inventory/bulk-add", payload);
 
       const failedFromServer =
         data.failedRows || data.failed || data.errors || [];
@@ -247,6 +275,8 @@ export default function BulkImportItems() {
         alert(`✅ Successfully imported ${successCount} item(s).`);
         setRows([]);
         setFileName("");
+        setDeliveryNumber("");
+        setCreateInitialDelivery(false);
       } else {
         const failedOnly = failedFromServer
           .map((f) => {
@@ -339,12 +369,16 @@ export default function BulkImportItems() {
                   with the following columns:
                 </p>
                 <div className="bg-gray-100 border border-gray-200 rounded-md p-2 text-[11px] font-mono text-gray-700">
-                  itemType,itemName,sizeOrSource,barcode
+                  itemType,itemName,sizeOrSource,barcode,quantity
                   <br />
-                  P.E. Uniform,PE T-Shirt,Small,ITEM-000001
+                  P.E. Uniform,PE T-Shirt,Small,ITEM-000001,10
                   <br />
-                  Regular Uniform,Formal Pants,Size 32,ITEM-000002
+                  Regular Uniform,Formal Pants,Size 32,ITEM-000002,5
                 </div>
+                <p className="text-[11px] text-gray-500">
+                  <b>Note:</b> <code>quantity</code> is optional. If omitted or
+                  blank, it will be treated as <b>0</b>.
+                </p>
                 <Button
                   type="button"
                   size="sm"
@@ -354,6 +388,39 @@ export default function BulkImportItems() {
                   <Download className="w-3 h-3" />
                   Download Template (.xlsx)
                 </Button>
+              </div>
+
+              {/* 🆕 Initial stock / delivery options */}
+              <div className="grid gap-2 sm:grid-cols-[auto,1fr] items-center border border-gray-200 rounded-md p-3 bg-gray-50">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="createInitialDelivery"
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={createInitialDelivery}
+                    onChange={(e) => setCreateInitialDelivery(e.target.checked)}
+                  />
+                  <label
+                    htmlFor="createInitialDelivery"
+                    className="text-xs text-gray-800"
+                  >
+                    Also create{" "}
+                    <span className="font-semibold">Initial Stock-In</span>{" "}
+                    delivery with these quantities
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600 whitespace-nowrap">
+                    Delivery No.
+                  </span>
+                  <Input
+                    placeholder="e.g. INIT-2025-001"
+                    value={deliveryNumber}
+                    disabled={!createInitialDelivery}
+                    onChange={(e) => setDeliveryNumber(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
               </div>
 
               {/* File upload */}
@@ -461,6 +528,9 @@ export default function BulkImportItems() {
                           <th className="border px-2 py-1 text-left">
                             Barcode
                           </th>
+                          <th className="border px-2 py-1 text-left">
+                            Quantity
+                          </th>
                           <th className="border px-2 py-1 text-left">Error</th>
                         </tr>
                       </thead>
@@ -474,6 +544,9 @@ export default function BulkImportItems() {
                               {row.sizeOrSource}
                             </td>
                             <td className="border px-2 py-1">{row.barcode}</td>
+                            <td className="border px-2 py-1">
+                              {Number(row.quantity) || 0}
+                            </td>
                             <td className="border px-2 py-1">
                               {row.__error && (
                                 <span className="text-[11px] text-red-700">
