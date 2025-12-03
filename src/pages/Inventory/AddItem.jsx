@@ -17,13 +17,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
 export default function AddItem() {
   const [barcodeValue, setBarcodeValue] = useState("");
   const [generatedBarcode, setGeneratedBarcode] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")); // retrieve user info
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [form, setForm] = useState({
     itemType: "",
@@ -65,7 +64,7 @@ export default function AddItem() {
     setGeneratedBarcode(true);
   };
 
-  // ✅ Save item
+  // ✅ Save item (axios)
   const handleSave = async () => {
     if (!form.itemName || !form.itemType || !form.barcode) {
       alert("Please fill in all required fields.");
@@ -73,30 +72,29 @@ export default function AddItem() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const response = await axiosInstance.post("/inventory/add", form);
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data && data.item) {
         alert(`✅ Item saved successfully! Generated ID: ${data.item.itemId}`);
         setForm({
           itemType: "",
           itemName: "",
           sizeOrSource: "",
           barcode: "",
-          addedBy: form.addedBy,
+          addedBy: form.addedBy, // keep same user
         });
         setGeneratedBarcode(false);
+        setBarcodeValue("");
       } else {
-        alert(`❌ ${data.message}`);
+        alert("❌ Unexpected response from server.");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("❌ Failed to connect to server");
+      console.error("Error adding item:", error);
+      const msg =
+        error.response?.data?.message ||
+        "❌ Failed to connect to server or save item.";
+      alert(msg);
     }
   };
 

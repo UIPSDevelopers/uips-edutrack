@@ -32,6 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import axiosInstance from "@/lib/axios"; // ✅ use shared axios instance
 
 export default function Inventory() {
   const [items, setItems] = useState([]);
@@ -39,8 +40,6 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All");
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -79,7 +78,7 @@ export default function Inventory() {
   const canEditInventory = ["IT", "Accounts", "InventoryAdmin"].includes(role);
   const canDeleteInventory = ["IT", "InventoryAdmin"].includes(role);
 
-  // ✅ Fetch items (only if allowed)
+  // ✅ Fetch items (only if allowed) – using axiosInstance
   useEffect(() => {
     if (!canViewInventory) {
       setLoading(false);
@@ -90,13 +89,8 @@ export default function Inventory() {
 
     const fetchItems = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/inventory`, {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-        });
-        const data = await res.json();
+        const res = await axiosInstance.get("/inventory");
+        const data = res.data;
         setItems(Array.isArray(data) ? data : []);
         setFiltered(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -106,7 +100,7 @@ export default function Inventory() {
       }
     };
     fetchItems();
-  }, [API_BASE_URL, canViewInventory]);
+  }, [canViewInventory]);
 
   // ✅ Search & Filter logic
   useEffect(() => {
@@ -149,56 +143,37 @@ export default function Inventory() {
   };
 
   const handleUpdate = async () => {
-    if (!canEditInventory) return; // defensive
+    if (!canEditInventory) return;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${API_BASE_URL}/inventory/${editingItem.itemId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-          body: JSON.stringify(editForm),
-        }
+      const res = await axiosInstance.put(
+        `/inventory/${editingItem.itemId}`,
+        editForm
       );
-      const data = await res.json();
+      const data = res.data;
 
-      if (res.ok) {
-        alert("✅ Item updated successfully!");
-        setShowDialog(false);
-        setItems((prev) =>
-          prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
-        );
-      } else {
-        alert(`❌ ${data.message}`);
-      }
+      alert("✅ Item updated successfully!");
+      setShowDialog(false);
+      setItems((prev) =>
+        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
+      );
     } catch (error) {
       console.error("Error updating:", error);
+      const msg = error.response?.data?.message || "❌ Failed to update item.";
+      alert(msg);
     }
   };
 
   const handleDelete = async (itemId) => {
-    if (!canDeleteInventory) return; // defensive
+    if (!canDeleteInventory) return;
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/inventory/${itemId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("🗑️ Item deleted successfully!");
-        setItems((prev) => prev.filter((it) => it.itemId !== itemId));
-      } else {
-        alert(`❌ ${data.message}`);
-      }
+      await axiosInstance.delete(`/inventory/${itemId}`);
+      alert("🗑️ Item deleted successfully!");
+      setItems((prev) => prev.filter((it) => it.itemId !== itemId));
     } catch (error) {
       console.error("Error deleting:", error);
+      const msg = error.response?.data?.message || "❌ Failed to delete item.";
+      alert(msg);
     }
   };
 

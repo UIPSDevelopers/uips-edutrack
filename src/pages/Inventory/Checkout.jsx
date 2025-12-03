@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getCurrentUser } from "@/lib/getCurrentUser";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
 export default function Checkout() {
   const [barcode, setBarcode] = useState("");
@@ -26,8 +27,6 @@ export default function Checkout() {
   const [checkoutId, setCheckoutId] = useState("");
   const [transactionNo, setTransactionNo] = useState("");
   const barcodeInputRef = useRef(null);
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 
   // ✅ Sidebar state (for mobile)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,17 +43,15 @@ export default function Checkout() {
     barcodeInputRef.current?.focus();
   }, [items]);
 
-  // 🔍 Add item by barcode
+  // 🔍 Add item by barcode (axios)
   const handleAdd = async () => {
     if (!barcode.trim()) return;
 
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/inventory/barcode/${barcode}`
-      );
-      const data = await res.json();
+      const res = await axiosInstance.get(`/inventory/barcode/${barcode}`);
+      const data = res.data;
 
-      if (!res.ok || !data.item) {
+      if (!data.item) {
         alert("❌ Item not found in inventory.");
         return;
       }
@@ -76,6 +73,7 @@ export default function Checkout() {
             itemId: item.itemId,
             itemName: item.itemName,
             itemType: item.itemType,
+            // sizeOrSource: item.sizeOrSource, // optional, backend ignores if not needed
             qty: 1,
           },
         ]);
@@ -85,7 +83,9 @@ export default function Checkout() {
       barcodeInputRef.current?.focus();
     } catch (error) {
       console.error("Error fetching item:", error);
-      alert("⚠️ Server error while fetching item.");
+      const msg =
+        error.response?.data?.message || "⚠️ Server error while fetching item.";
+      alert(msg);
     }
   };
 
@@ -111,7 +111,7 @@ export default function Checkout() {
     setShowDialog(true);
   };
 
-  // ✅ Confirm checkout → send to backend
+  // ✅ Confirm checkout → send to backend (axios)
   const handleConfirmCheckout = async () => {
     if (!receiptNo.trim()) {
       alert("Please enter a valid receipt number.");
@@ -127,35 +127,28 @@ export default function Checkout() {
           itemName: i.itemName,
           itemType: i.itemType,
           barcode: i.barcode,
-          sizeOrSource: i.sizeOrSource,
+          sizeOrSource: i.sizeOrSource, // may be undefined, backend can ignore
           quantity: i.qty,
         })),
       };
 
-      const res = await fetch(`${API_BASE_URL}/checkouts/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await axiosInstance.post("/checkouts/add", payload);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setCheckoutId(data.checkoutId);
-        setTransactionNo(data.transactionNo);
-        alert(
-          `✅ Checkout successful!\nCheckout ID: ${data.checkoutId}\nTransaction No: ${data.transactionNo}`
-        );
-        setItems([]);
-        setReceiptNo("");
-        setShowDialog(false);
-      } else {
-        console.log("Checkout error:", data);
-        alert(`❌ ${data.message}`);
-      }
+      setCheckoutId(data.checkoutId);
+      setTransactionNo(data.transactionNo);
+      alert(
+        `✅ Checkout successful!\nCheckout ID: ${data.checkoutId}\nTransaction No: ${data.transactionNo}`
+      );
+      setItems([]);
+      setReceiptNo("");
+      setShowDialog(false);
     } catch (error) {
       console.error("Error saving checkout:", error);
-      alert("⚠️ Server error while saving checkout.");
+      const msg =
+        error.response?.data?.message ||
+        "⚠️ Server error while saving checkout.";
+      alert(msg);
     }
   };
 

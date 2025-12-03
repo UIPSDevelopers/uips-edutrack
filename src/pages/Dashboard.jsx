@@ -26,6 +26,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,25 +35,23 @@ export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [topCheckedOut, setTopCheckedOut] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const [summaryRes, topRes, recentRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/dashboard/summary`),
-          fetch(`${API_BASE_URL}/dashboard/top-checkedout`),
-          fetch(`${API_BASE_URL}/dashboard/recent`),
+          axiosInstance.get("/dashboard/summary"),
+          axiosInstance.get("/dashboard/top-checkedout"),
+          axiosInstance.get("/dashboard/recent"),
         ]);
 
-        const summary = await summaryRes.json();
-        const top = await topRes.json();
-        const recent = await recentRes.json();
+        const summary = summaryRes.data;
+        const top = topRes.data;
+        const recent = recentRes.data;
 
-        setStats(summary);
-        setLowStockItems(summary.lowStockItems || []);
-        setCategoryData(summary.categoryDistribution || []);
+        setStats(summary || {});
+        setLowStockItems(summary?.lowStockItems || []);
+        setCategoryData(summary?.categoryDistribution || []);
         setTopCheckedOut(top || []);
         setRecentActivity(recent || []);
       } catch (err) {

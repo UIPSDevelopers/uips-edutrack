@@ -26,16 +26,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
-// 🧩 Backend API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/";
-
-// ✅ Helper functions
+// ✅ Helper functions (axios-based)
 async function fetchCheckoutByRef(receiptNo) {
   try {
-    const res = await fetch(`${API_BASE_URL}/checkouts/${receiptNo}`);
-    if (!res.ok) throw new Error("Checkout not found");
-    return await res.json();
+    const res = await axiosInstance.get(`/checkouts/${receiptNo}`);
+    return res.data;
   } catch (err) {
     console.error("Fetch checkout error:", err);
     return null;
@@ -44,12 +41,8 @@ async function fetchCheckoutByRef(receiptNo) {
 
 async function createReturn(payload) {
   try {
-    const res = await fetch(`${API_BASE_URL}/returns`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    return await res.json();
+    const res = await axiosInstance.post("/returns", payload);
+    return res.data;
   } catch (err) {
     console.error("Create return error:", err);
     return { message: "Server error" };
@@ -58,10 +51,11 @@ async function createReturn(payload) {
 
 async function getReturns() {
   try {
-    const res = await fetch(`${API_BASE_URL}/returns`);
-    const data = await res.json();
+    const res = await axiosInstance.get("/returns");
+    const data = res.data;
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (err) {
+    console.error("Get returns error:", err);
     return [];
   }
 }
@@ -371,8 +365,13 @@ function ReturnForm() {
             <b>Summary:</b> {totals.items} items | Qty {totals.qty} | Damaged{" "}
             {totals.damaged}
           </div>
-          <Button onClick={handleSubmit}>
-            <FileCheck className="h-4 w-4 mr-2" /> Confirm Return
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileCheck className="h-4 w-4 mr-2" />
+            )}
+            Confirm Return
           </Button>
         </div>
       </CardContent>

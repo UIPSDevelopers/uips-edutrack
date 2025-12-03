@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileText } from "lucide-react";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import { generatePDFTemplate } from "@/utils/generatePDFTemplate";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
 
 export default function Reports() {
   const [from, setFrom] = useState("");
@@ -22,40 +23,35 @@ export default function Reports() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
       let url = "";
 
-      if (type === "delivery") url = `${API_BASE_URL}/reports/delivery`;
-      if (type === "checkout") url = `${API_BASE_URL}/reports/checkout`;
-      if (type === "returns") url = `${API_BASE_URL}/reports/returns`;
-      if (type === "summary") url = `${API_BASE_URL}/reports/summary`;
+      if (type === "delivery") url = "/reports/delivery";
+      if (type === "checkout") url = "/reports/checkout";
+      if (type === "returns") url = "/reports/returns";
+      if (type === "summary") url = "/reports/summary";
 
-      // ✅ Build date range query
-      let query = "";
+      // ✅ Build date range params
+      let params = {};
       if (from && to) {
         const fromDate = new Date(from);
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
-        query = `?from=${fromDate.toISOString()}&to=${toDate.toISOString()}`;
+
+        params.from = fromDate.toISOString();
+        params.to = toDate.toISOString();
       }
 
-      const finalUrl = `${url}${query}`;
-      console.log("📡 Fetching:", finalUrl);
+      console.log("📡 Fetching:", url, "params:", params);
 
-      const res = await fetch(finalUrl);
-      const result = await res.json();
+      // ✅ axiosInstance handles baseURL + token
+      const res = await axiosInstance.get(url, { params });
+      const result = res.data;
 
       console.log("✅ Data received:", result);
-
-      if (!res.ok) {
-        alert(`❌ ${result.message || "Failed to load report."}`);
-        return;
-      }
 
       // ✅ handle summary format or normal array
       if (result.summary && Array.isArray(result.summary)) {
@@ -70,7 +66,10 @@ export default function Reports() {
       }
     } catch (error) {
       console.error("❌ Error generating report:", error);
-      alert("⚠️ Server error while generating report.");
+      const msg =
+        error.response?.data?.message ||
+        "⚠️ Server error while generating report.";
+      alert(msg);
     } finally {
       setLoading(false);
     }
