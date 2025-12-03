@@ -16,7 +16,6 @@ import Reports from "@/pages/Inventory/Reports";
 import { useWarmupServer } from "@/hooks/useWarmupServer";
 import useAutoLogout from "@/hooks/useAutoLogout";
 
-
 // ✅ Protected Route Wrapper
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -97,6 +96,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddItem />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/bulk-import"
+            element={
+              <ProtectedRoute>
+                <BulkImportItems />
               </ProtectedRoute>
             }
           />
