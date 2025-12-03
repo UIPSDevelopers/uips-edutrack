@@ -3,17 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
-import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Package,
-  ClipboardCheck,
-  Wrench,
-  AlertTriangle,
-  Ban,
-  Clock,
-  Search,
-} from "lucide-react";
+import { Package, Ban, Search } from "lucide-react";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import {
   Select,
@@ -86,7 +77,7 @@ export default function Inventory() {
 
   const isAll = limit === 0;
 
-  // ✅ Fetch items (only if allowed) – backend pagination + search/filter + all
+  // ✅ Fetch items (backend pagination + search/filter + all)
   useEffect(() => {
     if (!canViewInventory) {
       setLoading(false);
@@ -474,124 +465,6 @@ export default function Inventory() {
               </Card>
             )}
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-              {/* Total Items */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Total Items</p>
-                  <h2 className="text-2xl font-semibold text-gray-800">
-                    {totalItems}
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-[#800000]/10 rounded-full" />
-                  <Package className="w-10 h-10 text-[#800000] relative z-10" />
-                </div>
-              </motion.div>
-
-              {/* Total Quantity (current dataset) */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Total Quantity</p>
-                  <h2 className="text-2xl font-semibold text-[#800000]">
-                    {totalQuantity}
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-[#800000]/10 rounded-full" />
-                  <ClipboardCheck className="w-10 h-10 text-[#800000] relative z-10" />
-                </div>
-              </motion.div>
-
-              {/* Categories */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Categories</p>
-                  <h2 className="text-2xl font-semibold text-yellow-600">
-                    {
-                      new Set(
-                        items.map((item) => item.itemType || "Uncategorized")
-                      ).size
-                    }
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-yellow-400/20 rounded-full" />
-                  <Wrench className="w-10 h-10 text-yellow-600 relative z-10" />
-                </div>
-              </motion.div>
-
-              {/* Low Stock */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Low Stock</p>
-                  <h2 className="text-2xl font-semibold text-orange-600">
-                    {
-                      items.filter((i) => i.quantity > 0 && i.quantity < 10)
-                        .length
-                    }
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-orange-400/20 rounded-full" />
-                  <AlertTriangle className="w-10 h-10 text-orange-600 relative z-10" />
-                </div>
-              </motion.div>
-
-              {/* Out of Stock */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Out of Stock</p>
-                  <h2 className="text-2xl font-semibold text-red-600">
-                    {items.filter((i) => i.quantity === 0).length}
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-red-400/20 rounded-full" />
-                  <Ban className="w-10 h-10 text-red-600 relative z-10" />
-                </div>
-              </motion.div>
-
-              {/* Recently Added */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
-              >
-                <div>
-                  <p className="text-sm text-gray-500">Recently Added</p>
-                  <h2 className="text-2xl font-semibold text-green-700">
-                    {
-                      items.filter(
-                        (i) =>
-                          new Date(i.createdAt) >=
-                          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                      ).length
-                    }
-                  </h2>
-                </div>
-                <div className="relative">
-                  <div className="absolute -right-2 -bottom-2 w-14 h-14 bg-green-400/20 rounded-full" />
-                  <Clock className="w-10 h-10 text-green-700 relative z-10" />
-                </div>
-              </motion.div>
-            </div>
-
             {/* Filter + Search */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div className="flex items-center gap-2 w-full md:w-1/3">
@@ -639,7 +512,7 @@ export default function Inventory() {
                   </Select>
                 </div>
 
-                {/* 🆕 Rows per page */}
+                {/* Rows per page */}
                 <div className="w-1/2 md:w-40">
                   <Select
                     value={isAll ? "0" : String(limit)}
@@ -676,8 +549,8 @@ export default function Inventory() {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 text-sm">
                     <span className="text-gray-500">
                       {isAll
-                        ? `Showing all ${totalItems} items`
-                        : `Page ${page} of ${totalPages} • Total items: ${totalItems}`}
+                        ? `Showing all ${totalItems} items (Qty: ${totalQuantity})`
+                        : `Page ${page} of ${totalPages} • Total items: ${totalItems} • Qty on this page: ${totalQuantity}`}
                     </span>
 
                     {!isAll && totalPages > 1 && (
