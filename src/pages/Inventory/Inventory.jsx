@@ -671,6 +671,61 @@ export default function Inventory() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* TOP: Pagination info */}
+                {!loading && filtered.length > 0 && (
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 text-sm">
+                    <span className="text-gray-500">
+                      {isAll
+                        ? `Showing all ${totalItems} items`
+                        : `Page ${page} of ${totalPages} • Total items: ${totalItems}`}
+                    </span>
+
+                    {!isAll && totalPages > 1 && (
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setPage((p) => p - 1)}
+                        >
+                          Previous
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= totalPages}
+                          onClick={() => setPage((p) => p + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TOP: Export Buttons */}
+                {!loading && filtered.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    <Button
+                      onClick={handleExportPDF}
+                      className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                    >
+                      <Package className="w-4 h-4" />
+                      Export (This View)
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={handleExportAllPDF}
+                      className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
+                    >
+                      <Package className="w-4 h-4" />
+                      Export ALL
+                    </Button>
+                  </div>
+                )}
+
                 <div className="overflow-x-auto">
                   {loading ? (
                     <p className="text-center text-gray-500 py-6">
@@ -742,61 +797,6 @@ export default function Inventory() {
                       </tbody>
                     </table>
                   )}
-                </div>
-
-                {/* Pagination / info */}
-                {!loading && filtered.length > 0 && (
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4 text-sm">
-                    <span className="text-gray-500">
-                      {isAll
-                        ? `Showing all ${totalItems} items`
-                        : `Page ${page} of ${totalPages} • Total items: ${totalItems}`}
-                    </span>
-
-                    {!isAll && totalPages > 1 && (
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page <= 1}
-                          onClick={() => setPage((p) => p - 1)}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage((p) => p + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="pt-4">
-                  <div className="md:col-span-2 flex flex-wrap gap-2">
-                    {/* Current view export (page / filtered dataset in state) */}
-                    <Button
-                      onClick={handleExportPDF}
-                      className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-                    >
-                      <Package className="w-4 h-4" />
-                      Export (This View)
-                    </Button>
-
-                    {/* FULL export – always fetches all from backend with filters */}
-                    <Button
-                      variant="outline"
-                      onClick={handleExportAllPDF}
-                      className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
-                    >
-                      <Package className="w-4 h-4" />
-                      Export ALL
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
