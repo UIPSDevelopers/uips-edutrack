@@ -18,7 +18,7 @@ const navItems = [
   { name: "Property Tagging", icon: Tag, path: "/property-tagging" },
   { name: "Visitors", icon: Users, path: "/visitors" },
   { name: "Users", icon: UserCog, path: "/users" },
-  { name: "Reports", icon: FileText, path: "/reports" },
+  { name: "Reports", icon: FileText, path: "/reports-page" },
   { name: "Settings", icon: Settings, path: "/settings" },
 ];
 

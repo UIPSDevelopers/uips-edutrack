@@ -14,6 +14,10 @@ import Checkout from "@/pages/Inventory/Checkout";
 import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
 import BulkImportItems from "@/pages/Inventory/BulkImportItems";
+import PropertyTagging from "@/pages/PropertyTagging";
+import ReportsPage from "@/pages/ReportsPage";
+import Settings from "@/pages/Settings";
+import Visitors from "@/pages/Visitors";
 
 import { useWarmupServer } from "@/hooks/useWarmupServer";
 import useAutoLogout from "@/hooks/useAutoLogout";
@@ -80,6 +84,10 @@ function App() {
             {/* Dashboard / core */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/property-tagging" element={<PropertyTagging />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/visitors" element={<Visitors />} />
+            <Route path="/reports-page" element={<ReportsPage />} />
 
             {/* Inventory System Routes */}
             <Route path="/inventory" element={<Inventory />} />

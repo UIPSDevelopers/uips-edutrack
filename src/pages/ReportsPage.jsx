@@ -1,6 +1,6 @@
 import ComingSoon from "@/pages/ComingSoon";
 
-export default function Visitors() {
+export default function ReportsPage() {
   return (
     <ComingSoon
       title="Reports Module Coming Soon"
