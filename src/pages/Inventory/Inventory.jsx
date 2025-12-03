@@ -51,6 +51,12 @@ export default function Inventory() {
   });
   const [showDialog, setShowDialog] = useState(false);
 
+  // 🆕 Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20); // items per page
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0); // overall count from backend
+
   // 🔹 Sidebar control
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -78,50 +84,62 @@ export default function Inventory() {
   const canEditInventory = ["IT", "Accounts", "InventoryAdmin"].includes(role);
   const canDeleteInventory = ["IT", "InventoryAdmin"].includes(role);
 
-  // ✅ Fetch items (only if allowed) – using axiosInstance
+  // ✅ Fetch items (only if allowed) – using axiosInstance + pagination + search/filter
   useEffect(() => {
     if (!canViewInventory) {
       setLoading(false);
       setItems([]);
       setFiltered([]);
+      setTotalItems(0);
+      setTotalPages(1);
       return;
     }
 
     const fetchItems = async () => {
       try {
-        const res = await axiosInstance.get("/inventory");
+        setLoading(true);
+
+        const res = await axiosInstance.get("/inventory", {
+          params: {
+            page,
+            limit,
+            search: searchTerm || undefined,
+            type: selectedType !== "All" ? selectedType : undefined,
+          },
+        });
+
         const data = res.data;
-        setItems(Array.isArray(data) ? data : []);
-        setFiltered(Array.isArray(data) ? data : []);
+
+        // Support both new (paginated) and old (array) responses gracefully
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        setItems(list);
+        setFiltered(list);
+
+        if (!Array.isArray(data)) {
+          setTotalItems(data.total || list.length || 0);
+          setTotalPages(data.pages || 1);
+        } else {
+          setTotalItems(list.length || 0);
+          setTotalPages(1);
+        }
       } catch (error) {
         console.error("Error fetching items:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchItems();
-  }, [canViewInventory]);
+  }, [canViewInventory, page, limit, searchTerm, selectedType]);
 
-  // ✅ Search & Filter logic
-  useEffect(() => {
-    let filteredData = [...items];
+  // ⛔️ NOTE: old client-side filter useEffect is no longer needed since
+  // we now filter via backend parameters, so it is removed.
 
-    if (selectedType !== "All") {
-      filteredData = filteredData.filter(
-        (item) => item.itemType === selectedType
-      );
-    }
-
-    if (searchTerm.trim() !== "") {
-      filteredData = filteredData.filter((item) =>
-        item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFiltered(filteredData);
-  }, [searchTerm, selectedType, items]);
-
-  const totalItems = items.length;
   const totalQuantity = items.reduce((acc, i) => acc + (i.quantity || 0), 0);
 
   const handleEdit = (item) => {
@@ -156,6 +174,9 @@ export default function Inventory() {
       setItems((prev) =>
         prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
       );
+      setFiltered((prev) =>
+        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
+      );
     } catch (error) {
       console.error("Error updating:", error);
       const msg = error.response?.data?.message || "❌ Failed to update item.";
@@ -170,6 +191,8 @@ export default function Inventory() {
       await axiosInstance.delete(`/inventory/${itemId}`);
       alert("🗑️ Item deleted successfully!");
       setItems((prev) => prev.filter((it) => it.itemId !== itemId));
+      setFiltered((prev) => prev.filter((it) => it.itemId !== itemId));
+      setTotalItems((prev) => (prev > 0 ? prev - 1 : 0));
     } catch (error) {
       console.error("Error deleting:", error);
       const msg = error.response?.data?.message || "❌ Failed to delete item.";
@@ -177,7 +200,7 @@ export default function Inventory() {
     }
   };
 
-  // ✅ Export PDF (all inventory roles allowed)
+  // ✅ Export PDF (uses current filtered list / page)
   const handleExportPDF = async () => {
     if (filtered.length === 0) {
       alert("⚠️ No data to export.");
@@ -261,8 +284,8 @@ export default function Inventory() {
         alternateRowStyles: { fillColor: [245, 245, 245] },
       });
 
-      const totalItems = filtered.length;
-      const totalQuantity = filtered.reduce(
+      const totalItemsForPdf = filtered.length;
+      const totalQuantityForPdf = filtered.reduce(
         (acc, i) => acc + (i.quantity || 0),
         0
       );
@@ -270,8 +293,8 @@ export default function Inventory() {
 
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
-      doc.text(`Total Items: ${totalItems}`, 40, finalY);
-      doc.text(`Total Quantity: ${totalQuantity}`, 180, finalY);
+      doc.text(`Total Items: ${totalItemsForPdf}`, 40, finalY);
+      doc.text(`Total Quantity: ${totalQuantityForPdf}`, 180, finalY);
 
       doc.setFontSize(9);
       doc.setTextColor(120, 120, 120);
@@ -342,7 +365,7 @@ export default function Inventory() {
                 </div>
               </motion.div>
 
-              {/* Total Quantity */}
+              {/* Total Quantity (current page) */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex items-center justify-between relative overflow-hidden"
@@ -448,14 +471,20 @@ export default function Inventory() {
                 <Input
                   placeholder="Search item name..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setPage(1); // 🆕 reset to first page when searching
+                    setSearchTerm(e.target.value);
+                  }}
                   className="h-10 w-full border-gray-300 focus:ring-2 focus:ring-[#800000]"
                 />
               </div>
 
               <div className="w-full md:w-1/4">
                 <Select
-                  onValueChange={(val) => setSelectedType(val)}
+                  onValueChange={(val) => {
+                    setPage(1); // 🆕 reset page when changing filter
+                    setSelectedType(val);
+                  }}
                   value={selectedType}
                 >
                   <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
@@ -524,7 +553,9 @@ export default function Inventory() {
                             key={item.itemId}
                             className="border-b hover:bg-gray-50 transition"
                           >
-                            <td className="p-3">{i + 1}</td>
+                            <td className="p-3">
+                              {(page - 1) * limit + (i + 1)}
+                            </td>
                             <td className="p-3 font-medium text-[#800000]">
                               {item.itemId}
                             </td>
@@ -560,6 +591,34 @@ export default function Inventory() {
                     </table>
                   )}
                 </div>
+
+                {/* 🆕 Pagination controls */}
+                {!loading && filtered.length > 0 && (
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4 text-sm">
+                    <span className="text-gray-500">
+                      Page {page} of {totalPages} • Total items: {totalItems}
+                    </span>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4">
                   <div className="md:col-span-2">
                     <Button
