@@ -120,10 +120,13 @@ export default function Users() {
     try {
       console.log("🔹 Updating user:", editUser);
 
-      const res = await axiosInstance.put(
-        `/users/${editUser.userId}`,
-        editUser
-      );
+      // 🆕 Build payload and avoid sending empty password
+      const payload = { ...editUser };
+      if (!payload.password) {
+        delete payload.password; // don't update password if left blank
+      }
+
+      const res = await axiosInstance.put(`/users/${editUser.userId}`, payload);
 
       console.log("✅ Update user response:", res.data);
 
@@ -367,7 +370,9 @@ export default function Users() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setEditUser(user)}
+                                    onClick={() =>
+                                      setEditUser({ ...user, password: "" })
+                                    }
                                   >
                                     <Pencil size={14} className="mr-1" /> Edit
                                   </Button>
@@ -426,6 +431,21 @@ export default function Users() {
                                           })
                                         }
                                         required
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <Label>New Password (optional)</Label>
+                                      <Input
+                                        type="password"
+                                        placeholder="Leave blank to keep current password"
+                                        value={editUser?.password || ""}
+                                        onChange={(e) =>
+                                          setEditUser({
+                                            ...editUser,
+                                            password: e.target.value,
+                                          })
+                                        }
                                       />
                                     </div>
 
