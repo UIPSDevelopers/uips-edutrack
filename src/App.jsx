@@ -15,6 +15,7 @@ import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
 import { useWarmupServer } from "@/hooks/useWarmupServer";
 import useAutoLogout from "@/hooks/useAutoLogout";
+import BulkImportItems from "@/pages/Inventory/BulkImportItems";
 
 // ✅ Protected Route Wrapper
 function ProtectedRoute({ children }) {
