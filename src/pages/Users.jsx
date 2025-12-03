@@ -157,13 +157,7 @@ export default function Users() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      {/* ✅ Sidebar toggle support */}
-      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
-
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300 relative">
-        {/* ✅ Topbar with hamburger toggle */}
-        <Topbar onToggleSidebar={handleToggleSidebar} />
-
         {/* 🚫 Unauthorized overlay (IT-only) */}
         {!canAccessUsers && (
           <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-50">

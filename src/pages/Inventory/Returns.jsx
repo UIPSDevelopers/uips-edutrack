@@ -66,11 +66,7 @@ export default function Returns() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <div className="flex-1 ml-0 md:ml-64 transition-all">
-        <Topbar onToggleSidebar={() => setSidebarOpen(true)} />
-
         <main className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">

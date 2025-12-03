@@ -109,13 +109,7 @@ export default function AddItem() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      {/* Sidebar now controlled by state */}
-      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
-
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        {/* Topbar with working hamburger */}
-        <Topbar onToggleSidebar={handleToggleSidebar} />
-
         <main className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-semibold text-gray-800">

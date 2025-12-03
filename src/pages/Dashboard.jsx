@@ -71,10 +71,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 ml-0 md:ml-64 transition-all">
-        <Topbar onToggleSidebar={() => setSidebarOpen(true)} />
-
         <main className="p-6 space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 15 }}

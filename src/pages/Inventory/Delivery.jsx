@@ -152,13 +152,7 @@ export default function Delivery() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      {/* ✅ Sidebar toggle support */}
-      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
-
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        {/* ✅ Topbar with hamburger toggle */}
-        <Topbar onToggleSidebar={handleToggleSidebar} />
-
         <main className="p-6 space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-4">

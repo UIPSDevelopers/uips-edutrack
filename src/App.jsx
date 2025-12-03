@@ -13,9 +13,12 @@ import Delivery from "@/pages/Inventory/Delivery";
 import Checkout from "@/pages/Inventory/Checkout";
 import Returns from "@/pages/Inventory/Returns";
 import Reports from "@/pages/Inventory/Reports";
+import BulkImportItems from "@/pages/Inventory/BulkImportItems";
+
 import { useWarmupServer } from "@/hooks/useWarmupServer";
 import useAutoLogout from "@/hooks/useAutoLogout";
-import BulkImportItems from "@/pages/Inventory/BulkImportItems";
+
+import AppLayout from "@/layouts/AppLayout"; // 🆕 layout with Sidebar + Topbar
 
 // ✅ Protected Route Wrapper
 function ProtectedRoute({ children }) {
@@ -32,7 +35,8 @@ function PublicRoute({ children }) {
 function App() {
   const token = localStorage.getItem("token");
   const { isWarmingUp } = useWarmupServer(token);
-  // 🆕 enable idle logout only when logged in
+
+  // 🆕 enable idle logout only when logged in (15 minutes)
   useAutoLogout(15);
 
   return (
@@ -55,7 +59,7 @@ function App() {
         )}
 
         <Routes>
-          {/* 🟢 Public Routes */}
+          {/* 🟢 Public Route */}
           <Route
             path="/"
             element={
@@ -65,86 +69,32 @@ function App() {
             }
           />
 
-          {/* 🔐 Protected Routes */}
+          {/* 🔐 All protected routes share the same layout */}
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <AppLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute>
-                <Users />
-              </ProtectedRoute>
-            }
-          />
+          >
+            {/* Dashboard / core */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/users" element={<Users />} />
 
-          {/* Inventory System Routes */}
-          <Route
-            path="/inventory"
-            element={
-              <ProtectedRoute>
-                <Inventory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/add-item"
-            element={
-              <ProtectedRoute>
-                <AddItem />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/bulk-import"
-            element={
-              <ProtectedRoute>
-                <BulkImportItems />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/delivery"
-            element={
-              <ProtectedRoute>
-                <Delivery />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/checkout"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
+            {/* Inventory System Routes */}
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/inventory/add-item" element={<AddItem />} />
+            <Route
+              path="/inventory/bulk-import"
+              element={<BulkImportItems />}
+            />
+            <Route path="/inventory/delivery" element={<Delivery />} />
+            <Route path="/inventory/checkout" element={<Checkout />} />
+            <Route path="/inventory/returns" element={<Returns />} />
+            <Route path="/inventory/reports" element={<Reports />} />
+          </Route>
 
-          {/* 🆕 Returns Page */}
-          <Route
-            path="/inventory/returns"
-            element={
-              <ProtectedRoute>
-                <Returns />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/inventory/reports"
-            element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 🚧 Fallback Route (404) */}
+          {/* 🚧 Fallback Route (404 → login) */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -154,13 +154,7 @@ export default function Checkout() {
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
-      {/* ✅ Sidebar with toggle for mobile */}
-      <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
-
       <div className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-        {/* ✅ Topbar with working hamburger */}
-        <Topbar onToggleSidebar={handleToggleSidebar} />
-
         <main className="p-6 space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
