@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Download,
 } from "lucide-react";
+import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance so token is sent
 
 export default function BulkImportItems() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,15 +26,12 @@ export default function BulkImportItems() {
   const [importSummary, setImportSummary] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const requiredHeaders = ["itemType", "itemName", "sizeOrSource", "barcode"];
 
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
 
-  const requiredHeaders = ["itemType", "itemName", "sizeOrSource", "barcode"];
-
-  // ---- Helpers ----
+  // ---------- Helpers ----------
 
   const normalizeAndValidate = (rawRows) => {
     if (!rawRows || !rawRows.length) {
@@ -47,16 +45,14 @@ export default function BulkImportItems() {
         lowerMap[k.toLowerCase()] = row[k];
       });
 
-      const mapped = {
-        __row: idx + 2,
+      return {
+        __row: idx + 2, // Excel row number (approx)
         itemType: lowerMap["itemtype"] || "",
         itemName: lowerMap["itemname"] || "",
         sizeOrSource:
           lowerMap["sizeorsource"] || lowerMap["size / source"] || "",
         barcode: lowerMap["barcode"] || "",
       };
-
-      return mapped;
     });
 
     const hasAnyValid = normalized.some(
@@ -206,6 +202,8 @@ export default function BulkImportItems() {
     }
   };
 
+  // ---------- Import handler (uses axiosInstance) ----------
+
   const handleImport = async () => {
     if (!rows.length) {
       setError("No data to import. Please upload a file first.");
@@ -230,17 +228,10 @@ export default function BulkImportItems() {
         addedBy,
       }));
 
-      const res = await fetch(`${API_BASE_URL}/inventory/bulk-add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: payloadItems }),
+      // ✅ axiosInstance automatically attaches Authorization: Bearer <token>
+      const { data } = await axiosInstance.post("/inventory/bulk-add", {
+        items: payloadItems,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Bulk import failed.");
-      }
 
       const failedFromServer =
         data.failedRows || data.failed || data.errors || [];
@@ -303,13 +294,17 @@ export default function BulkImportItems() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || "Error during bulk import.");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Error during bulk import."
+      );
     } finally {
       setUploading(false);
     }
   };
 
-  // ---- UI ----
+  // ---------- UI ----------
 
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
