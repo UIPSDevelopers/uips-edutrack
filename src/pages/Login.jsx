@@ -15,32 +15,33 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🆕 Backend wake-up state (now only used *during* login)
   const [wakingUp, setWakingUp] = useState(false);
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams(); // <== IMPORTANT FIX
 
-  // 🆕 Read session-expired info from URL
   const reason = searchParams.get("reason");
   const msgFromUrl = searchParams.get("msg");
 
-  // 🔐 Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) navigate("/dashboard");
   }, [navigate]);
 
-  // 🆕 If redirected due to session expiry, show message
+  // ✅ FIX: show message once, then remove ?reason=session_expired
   useEffect(() => {
     if (reason === "session_expired") {
       const message =
         msgFromUrl ||
         "Your session has expired due to inactivity. Please sign in again.";
+
       setError(message);
       toast.info(message);
+
+      // 🧹 Remove query params from URL
+      setSearchParams({}, { replace: true });
     }
-  }, [reason, msgFromUrl]);
+  }, [reason, msgFromUrl, setSearchParams]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -50,12 +51,9 @@ export default function Login() {
     setError("");
 
     setLoading(true);
-    setWakingUp(true); // 🆕 show "waking up" while logging in
+    setWakingUp(true);
 
     try {
-      // 🧊 If you still want a dedicated warmup call, you *could* do:
-      // await axiosInstance.get("/api/health", { timeout: 30000 });
-
       const response = await axiosInstance.post("/auth/login", {
         email: formData.email,
         password: formData.password,
@@ -79,7 +77,7 @@ export default function Login() {
       toast.error(msg);
     } finally {
       setLoading(false);
-      setWakingUp(false); // 🆕 hide wake-up banner after attempt
+      setWakingUp(false);
     }
   };
 
@@ -91,7 +89,7 @@ export default function Login() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-[#800000]/5 rounded-full blur-3xl animate-float-slow"></div>
       </div>
 
-      {/* 🆕 Wake-up banner – now only when logging in */}
+      {/* Wake-up banner */}
       {wakingUp && (
         <div className="absolute top-6 w-[90%] max-w-sm mx-auto text-center z-50">
           <div className="bg-[#800000]/10 border border-[#800000]/30 text-[#800000] py-3 px-4 rounded-xl shadow-sm text-sm animate-pulse">
@@ -112,14 +110,12 @@ export default function Login() {
           className="w-full max-w-sm bg-white/70 backdrop-blur-2xl border border-gray-200 rounded-3xl shadow-xl p-8 space-y-6"
         >
           {/* Header */}
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="text-center space-y-2"
           >
-            {/* Logo */}
             <div className="flex justify-center mb-1">
               <img
                 src="/Edutrack.png"
@@ -128,7 +124,6 @@ export default function Login() {
               />
             </div>
 
-            {/* Title */}
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
               UIPS EduTrack
             </h1>
@@ -136,11 +131,10 @@ export default function Login() {
             <p className="text-sm text-gray-500">Academic Monitoring System</p>
           </motion.div>
 
-          {/* Session expired banner (inside card) */}
-          {reason === "session_expired" && (
+          {/* One-time session expired banner */}
+          {error && reason === "session_expired" && (
             <div className="text-xs rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-center">
-              {msgFromUrl ||
-                "Your session has expired due to inactivity. Please sign in again."}
+              {error}
             </div>
           )}
 
@@ -189,7 +183,7 @@ export default function Login() {
               </button>
             </div>
 
-            {error && (
+            {error && reason !== "session_expired" && (
               <p className="text-red-600 text-sm text-center">{error}</p>
             )}
 
@@ -207,7 +201,6 @@ export default function Login() {
             </Button>
           </motion.form>
 
-          {/* Footer */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
