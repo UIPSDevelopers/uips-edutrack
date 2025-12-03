@@ -314,6 +314,132 @@ export default function Inventory() {
     }
   };
 
+  // 🆕 Export ALL (ignores pagination, respects filters)
+  const handleExportAllPDF = async () => {
+    try {
+      const params = {
+        all: true,
+        search: searchTerm || undefined,
+        type: selectedType !== "All" ? selectedType : undefined,
+      };
+
+      const res = await axiosInstance.get("/inventory", { params });
+      const data = res.data;
+
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.items)
+        ? data.items
+        : [];
+
+      if (!list.length) {
+        alert("⚠️ No data to export.");
+        return;
+      }
+
+      const doc = new jsPDF("l", "pt", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFillColor(128, 0, 0);
+      doc.rect(0, 0, pageWidth, 80, "F");
+
+      const logoUrl = "https://i.postimg.cc/DWkx44nh/uips-logo.png";
+      try {
+        const logoResponse = await fetch(logoUrl);
+        const logoBlob = await logoResponse.blob();
+        const reader = new FileReader();
+
+        const logoBase64 = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(logoBlob);
+        });
+
+        doc.addImage(logoBase64, "PNG", 25, -2, 80, 80);
+      } catch {
+        console.warn("⚠️ Logo not loaded, continuing without image.");
+      }
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("United International Private School", pageWidth / 2, 38, {
+        align: "center",
+      });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("EduTrack Inventory – FULL Export", pageWidth / 2, 58, {
+        align: "center",
+      });
+
+      const currentDate = new Date().toLocaleString();
+      doc.setFontSize(9);
+      doc.text(`Generated on: ${currentDate}`, pageWidth - 160, 72);
+
+      const headers = [
+        [
+          "#",
+          "Item ID",
+          "Item Name",
+          "Type",
+          "Size / Source",
+          "Barcode / Serial",
+          "Qty",
+          "Added By",
+        ],
+      ];
+
+      const body = list.map((item, index) => [
+        index + 1,
+        item.itemId,
+        item.itemName,
+        item.itemType,
+        item.sizeOrSource || "-",
+        item.barcode || "-",
+        item.quantity || 0,
+        item.addedBy || "-",
+      ]);
+
+      autoTable(doc, {
+        startY: 100,
+        head: headers,
+        body,
+        styles: { fontSize: 8, halign: "center", cellPadding: 4 },
+        headStyles: {
+          fillColor: [128, 0, 0],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      });
+
+      const totalItemsAll = list.length;
+      const totalQtyAll = list.reduce((acc, i) => acc + (i.quantity || 0), 0);
+      const finalY = doc.lastAutoTable.finalY + 30;
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Total Items: ${totalItemsAll}`, 40, finalY);
+      doc.text(`Total Quantity: ${totalQtyAll}`, 180, finalY);
+
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        "UIPS EduTrack — Inventory Management System",
+        pageWidth / 2,
+        doc.internal.pageSize.height - 20,
+        { align: "center" }
+      );
+
+      doc.save(
+        `UIPS_Inventory_ALL_${new Date().toISOString().split("T")[0]}.pdf`
+      );
+    } catch (err) {
+      console.error("❌ FULL PDF generation failed:", err);
+      alert("⚠️ Failed to generate FULL export PDF.");
+    }
+  };
+
   return (
     <div className="flex font-poppins bg-gray-50 min-h-screen">
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
@@ -651,13 +777,24 @@ export default function Inventory() {
                 )}
 
                 <div className="pt-4">
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 flex flex-wrap gap-2">
+                    {/* Current view export (page / filtered dataset in state) */}
                     <Button
                       onClick={handleExportPDF}
                       className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
                     >
                       <Package className="w-4 h-4" />
-                      Export as PDF
+                      Export (This View)
+                    </Button>
+
+                    {/* FULL export – always fetches all from backend with filters */}
+                    <Button
+                      variant="outline"
+                      onClick={handleExportAllPDF}
+                      className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
+                    >
+                      <Package className="w-4 h-4" />
+                      Export ALL
                     </Button>
                   </div>
                 </div>
