@@ -217,7 +217,7 @@ export default function Delivery() {
           {/* Table */}
           {scanned.length > 0 ? (
             <div className="overflow-x-auto rounded-md border border-gray-200 mt-4">
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-sm border-collapse uppercase">
                 <thead className="bg-gray-100 text-gray-700">
                   <tr>
                     <th className="p-3 text-left font-medium w-10">#</th>

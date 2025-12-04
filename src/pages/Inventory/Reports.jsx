@@ -208,7 +208,7 @@ export default function Reports() {
                 {data.length === 0 ? (
                   <p className="text-gray-600 text-sm">No data to display.</p>
                 ) : (
-                  <table className="w-full text-sm border-collapse">
+                  <table className="w-full text-sm border-collapse uppercase">
                     <thead className="bg-gray-100 text-gray-700">
                       <tr>
                         {(data.length > 0 ? Object.keys(data[0]) : []).map(

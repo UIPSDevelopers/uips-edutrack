@@ -602,7 +602,7 @@ export default function Inventory() {
                   No matching items found.
                 </p>
               ) : (
-                <table className="w-full text-sm border-collapse">
+                <table className="w-full text-sm border-collapse uppercase">
                   <thead>
                     <tr className="bg-gray-100 text-gray-700 text-left">
                       <th className="p-3 font-medium">#</th>

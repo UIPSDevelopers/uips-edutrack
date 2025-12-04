@@ -4,8 +4,8 @@ export default function PropertyTagging() {
   return (
     <ComingSoon
       title="Property Tagging Module Coming Soon"
-      subtitle="Powerful inventory and delivery reports are on the way."
-      note="Soon you’ll be able to generate summaries, exports, and analytics in just a few clicks."
+      subtitle="Efficient asset tracking and labeling features are on the way."
+      note="Soon you’ll be able to assign property tags, monitor asset movements, and maintain accurate records across all departments—fast, automated, and seamless."
     />
   );
 }

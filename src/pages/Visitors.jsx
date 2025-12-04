@@ -4,8 +4,8 @@ export default function Visitors() {
   return (
     <ComingSoon
       title="Visitors Module Coming Soon"
-      subtitle="Powerful inventory and delivery reports are on the way."
-      note="Soon you’ll be able to generate summaries, exports, and analytics in just a few clicks."
+      subtitle="A smarter and more secure way to handle campus visitors is coming."
+      note="Soon you’ll be able to log visitors, generate QR passes, track entry/exit activity, and maintain a complete visitor history—ensuring smooth and secure campus access."
     />
   );
 }

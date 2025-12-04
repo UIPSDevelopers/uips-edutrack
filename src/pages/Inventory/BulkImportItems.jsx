@@ -504,7 +504,7 @@ export default function BulkImportItems() {
               </div>
 
               <div className="border rounded-md overflow-auto max-h-80 text-xs">
-                <table className="min-w-full border-collapse">
+                <table className="min-w-full border-collapse uppercase">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="border px-2 py-1 text-left">#</th>

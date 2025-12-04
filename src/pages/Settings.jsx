@@ -4,8 +4,8 @@ export default function Settings() {
   return (
     <ComingSoon
       title="Settings Module Coming Soon"
-      subtitle="Powerful inventory and delivery reports are on the way."
-      note="Soon you’ll be able to generate summaries, exports, and analytics in just a few clicks."
+      subtitle="Customize and manage your EduTrack experience with ease."
+      note="Soon you’ll be able to update system preferences, manage user permissions, adjust module configurations, and control platform-wide settings—all in one place."
     />
   );
 }
