@@ -9,33 +9,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileText } from "lucide-react";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import { generatePDFTemplate } from "@/utils/generatePDFTemplate";
-import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
+import axiosInstance from "@/lib/axios";
 
 export default function Reports() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [type, setType] = useState("delivery");
+
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Sidebar state (for mobile)
+  // 🆕 pagination state (server-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20); // 10 / 20 / 50 / 0("All")
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const isAll = limit === 0;
+
+  // Sidebar (if you’re using it elsewhere)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
 
-  const handleGenerate = async () => {
+  const buildUrlForType = () => {
+    if (type === "delivery") return "/reports/delivery";
+    if (type === "checkout") return "/reports/checkout";
+    if (type === "returns") return "/reports/returns";
+    if (type === "summary") return "/reports/summary";
+    return "/reports/delivery";
+  };
+
+  // 🔹 Core fetch function (for generate + pagination)
+  const fetchReport = async (pageOverride = page, limitOverride = limit) => {
     setLoading(true);
     try {
-      let url = "";
+      const url = buildUrlForType();
 
-      if (type === "delivery") url = "/reports/delivery";
-      if (type === "checkout") url = "/reports/checkout";
-      if (type === "returns") url = "/reports/returns";
-      if (type === "summary") url = "/reports/summary";
+      const params = {};
 
-      // ✅ Build date range params
-      let params = {};
+      // date filters
       if (from && to) {
         const fromDate = new Date(from);
         const toDate = new Date(to);
@@ -45,24 +59,40 @@ export default function Reports() {
         params.to = toDate.toISOString();
       }
 
-      console.log("📡 Fetching:", url, "params:", params);
+      // pagination
+      if (limitOverride === 0) {
+        params.all = true;
+      } else {
+        params.page = pageOverride;
+        params.limit = limitOverride;
+      }
 
-      // ✅ axiosInstance handles baseURL + token
+      console.log("📡 Fetching:", url, "params:", params);
       const res = await axiosInstance.get(url, { params });
       const result = res.data;
 
       console.log("✅ Data received:", result);
 
-      // ✅ handle summary format or normal array
+      // summary-style response
       if (result.summary && Array.isArray(result.summary)) {
         setData(result.summary);
         setTotals(result.totals || null);
-      } else if (Array.isArray(result)) {
-        setData(result);
-        setTotals(null);
+        setTotalRecords(result.total || result.summary.length || 0);
+        setTotalPages(result.pages || 1);
+        setPage(result.page || pageOverride || 1);
       } else {
-        setData([]);
+        // normal paginated array or raw array
+        const list = Array.isArray(result)
+          ? result
+          : Array.isArray(result.items)
+          ? result.items
+          : [];
+
+        setData(list);
         setTotals(null);
+        setTotalRecords(result.total || list.length || 0);
+        setTotalPages(result.pages || 1);
+        setPage(result.page || pageOverride || 1);
       }
     } catch (error) {
       console.error("❌ Error generating report:", error);
@@ -75,14 +105,22 @@ export default function Reports() {
     }
   };
 
-  const handleExportToPDF = async () => {
-    if (!data || data.length === 0) {
+  // 🔘 Generate button handler
+  const handleGenerate = async () => {
+    // reset to page 1 whenever filters/type change
+    setPage(1);
+    await fetchReport(1, limit);
+  };
+
+  // 🧾 Export helper
+  const exportRowsToPDF = async (rows, scopeLabel) => {
+    if (!rows || rows.length === 0) {
       alert("⚠️ No data to export.");
       return;
     }
 
-    const tableHeaders = Object.keys(data[0]);
-    const tableData = data.map((item) =>
+    const tableHeaders = Object.keys(rows[0]);
+    const tableData = rows.map((item) =>
       tableHeaders.map((col) =>
         typeof item[col] === "object"
           ? JSON.stringify(item[col])
@@ -100,7 +138,53 @@ export default function Reports() {
       to,
     });
 
-    doc.save(`${type}_report_${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(
+      `${type}_report_${scopeLabel}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`
+    );
+  };
+
+  // 🔹 Export current page only
+  const handleExportCurrentPDF = async () => {
+    await exportRowsToPDF(data, "VIEW");
+  };
+
+  // 🔹 Export ALL (ignores pagination, respects filters)
+  const handleExportAllPDF = async () => {
+    try {
+      const url = buildUrlForType();
+      const params = { all: true };
+
+      if (from && to) {
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+
+        params.from = fromDate.toISOString();
+        params.to = toDate.toISOString();
+      }
+
+      const res = await axiosInstance.get(url, { params });
+      const result = res.data;
+
+      let list;
+
+      if (result.summary && Array.isArray(result.summary)) {
+        list = result.summary;
+      } else if (Array.isArray(result)) {
+        list = result;
+      } else if (Array.isArray(result.items)) {
+        list = result.items;
+      } else {
+        list = [];
+      }
+
+      await exportRowsToPDF(list, "ALL");
+    } catch (err) {
+      console.error("❌ FULL PDF generation failed:", err);
+      alert("⚠️ Failed to generate FULL export PDF.");
+    }
   };
 
   return (
@@ -195,12 +279,92 @@ export default function Reports() {
             </div>
           )}
 
+          {/* 🔹 Pagination + Export controls */}
+          {data.length > 0 && (
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4 text-sm">
+              <span className="text-gray-500">
+                {isAll
+                  ? `Showing all ${totalRecords} records`
+                  : `Page ${page} of ${totalPages} • Showing ${data.length} of ${totalRecords} records`}
+              </span>
+
+              <div className="flex flex-wrap gap-3 items-center justify-end">
+                {/* Rows per page */}
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Rows per page:</span>
+                  <select
+                    value={isAll ? "0" : String(limit)}
+                    onChange={async (e) => {
+                      const num = Number(e.target.value);
+                      setLimit(num);
+                      setPage(1);
+                      await fetchReport(1, num);
+                    }}
+                    className="border rounded-md px-2 py-1 text-xs"
+                  >
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="0">All</option>
+                  </select>
+                </div>
+
+                {/* Pagination buttons */}
+                {!isAll && totalPages > 1 && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={async () => {
+                        const newPage = page - 1;
+                        await fetchReport(newPage, limit);
+                      }}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={async () => {
+                        const newPage = page + 1;
+                        await fetchReport(newPage, limit);
+                      }}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+
+                {/* Export buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleExportCurrentPDF}
+                    className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
+                  >
+                    <Download size={16} />
+                    Export (This View)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleExportAllPDF}
+                    className="flex items-center gap-2 border-[#800000] text-[#800000] hover:bg-[#800000]/5"
+                  >
+                    <Download size={16} />
+                    Export ALL
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 🔹 Results Table */}
-          <div className="mt-6">
+          <div className="mt-4">
             <Card className="border border-gray-200">
               <CardHeader>
                 <CardTitle className="text-sm text-gray-500">
-                  Report Results ({data.length})
+                  Report Results ({totalRecords})
                 </CardTitle>
               </CardHeader>
 
@@ -265,19 +429,6 @@ export default function Reports() {
               </CardContent>
             </Card>
           </div>
-
-          {/* 🔹 Export Button */}
-          {data.length > 0 && (
-            <div className="pt-4">
-              <Button
-                onClick={handleExportToPDF}
-                className="bg-[#800000] hover:bg-[#a10000] text-white flex items-center gap-2"
-              >
-                <Download size={16} />
-                Export to PDF
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     </main>
