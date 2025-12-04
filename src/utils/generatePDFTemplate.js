@@ -1,7 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// 🧠 Converts camelCase or snake_case → clean labels
 function formatHeaderName(key) {
   return key
     .replace(/([A-Z])/g, " $1")
@@ -10,7 +9,6 @@ function formatHeaderName(key) {
     .trim();
 }
 
-// 🏫 UIPS Branded PDF Template (JS version)
 export async function generatePDFTemplate({
   title,
   subtitle,
@@ -24,8 +22,9 @@ export async function generatePDFTemplate({
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const headerHeight = 80;
+  const headerBottomTextY = headerHeight + 18;
 
-  // 🏫 Load UIPS Logo ONCE
+  // 🏫 Load UIPS Logo
   const logoUrl = "https://i.postimg.cc/DWkx44nh/uips-logo.png";
   let logoBase64 = null;
 
@@ -33,7 +32,6 @@ export async function generatePDFTemplate({
     const logoResponse = await fetch(logoUrl);
     const logoBlob = await logoResponse.blob();
     const reader = new FileReader();
-
     logoBase64 = await new Promise((resolve) => {
       reader.onloadend = () => resolve(reader.result);
       reader.readAsDataURL(logoBlob);
@@ -42,7 +40,7 @@ export async function generatePDFTemplate({
     console.warn("⚠️ Logo not loaded, continuing without image.");
   }
 
-  // 🧾 Date range text
+  // 📅 Date Range
   let rangeText = "All Data";
 
   if (from || to) {
@@ -67,9 +65,9 @@ export async function generatePDFTemplate({
 
   const generatedText = new Date().toLocaleString();
 
-  // 🎨 Draw header (for EVERY page)
+  // 🎨 Draw Header (for each page)
   const drawHeader = () => {
-    // Maroon bar
+    // Maroon Bar
     doc.setFillColor(128, 0, 0);
     doc.rect(0, 0, pageWidth, headerHeight, "F");
 
@@ -78,7 +76,7 @@ export async function generatePDFTemplate({
       doc.addImage(logoBase64, "PNG", 25, -2, 80, 80);
     }
 
-    // Header Text
+    // School Name
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
@@ -86,30 +84,36 @@ export async function generatePDFTemplate({
       align: "center",
     });
 
+    // Subtitle
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.text(subtitle || title || "EduTrack Report", pageWidth / 2, 48, {
+    doc.text(subtitle || title || "EduTrack Report", pageWidth / 2, 50, {
       align: "center",
     });
 
-    // Date Range & Generated Time
+    // 🔹 BELOW the maroon bar
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(9);
-    doc.text(`Date Range: ${rangeText}`, 40, 68);
-    doc.text(`Generated on: ${generatedText}`, pageWidth - 180, 68);
+
+    // Date Range (left)
+    doc.text(`Date Range: ${rangeText}`, 40, headerBottomTextY);
+
+    // Generated On (right)
+    doc.text(
+      `Generated on: ${generatedText}`,
+      pageWidth - 180,
+      headerBottomTextY
+    );
   };
 
-  // 📋 Main table with repeating column headers
+  // 📋 Table
   autoTable(doc, {
-    startY: headerHeight + 20,
-    margin: { top: headerHeight + 20, left: 40, right: 40, bottom: 40 },
+    startY: headerBottomTextY + 20,
+    margin: { top: headerBottomTextY + 20, left: 40, right: 40, bottom: 40 },
     head: [tableHeaders.map((h) => formatHeaderName(h))],
     body: tableData,
-    showHead: "everyPage", // 🔁 COLUMN HEADERS ON EVERY PAGE
-    styles: {
-      fontSize: 8,
-      halign: "center",
-      cellPadding: 4,
-    },
+    showHead: "everyPage",
+    styles: { fontSize: 8, halign: "center", cellPadding: 4 },
     headStyles: {
       fillColor: [128, 0, 0],
       textColor: [255, 255, 255],
@@ -117,11 +121,10 @@ export async function generatePDFTemplate({
     },
     alternateRowStyles: { fillColor: [245, 245, 245] },
 
-    didDrawPage: function (data) {
-      // 🔁 Draw full header on every page
+    didDrawPage: (data) => {
       drawHeader();
 
-      // Footer text
+      // Footer
       doc.setFontSize(9);
       doc.setTextColor(120, 120, 120);
       doc.text(
@@ -136,11 +139,9 @@ export async function generatePDFTemplate({
     },
   });
 
-  // 📊 Totals Section (after table)
+  // 📊 Totals (bottom of last page)
   if (totals) {
-    const finalY =
-      (doc.lastAutoTable && doc.lastAutoTable.finalY + 30) || pageHeight - 120;
-
+    const finalY = doc.lastAutoTable.finalY + 30;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
 
