@@ -10,7 +10,7 @@ function formatHeaderName(key) {
     .trim();
 }
 
-// 🏫 UIPS Branded PDF Template
+// 🏫 UIPS Branded PDF Template (JS version)
 export async function generatePDFTemplate({
   title,
   subtitle,
@@ -22,112 +22,132 @@ export async function generatePDFTemplate({
 }) {
   const doc = new jsPDF("l", "pt", "a4");
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const headerHeight = 80;
 
-  // 🎨 Maroon Banner
-  doc.setFillColor(128, 0, 0);
-  doc.rect(0, 0, pageWidth, 80, "F");
-
-  // 🏫 Load UIPS Logo
+  // 🏫 Load UIPS Logo ONCE
   const logoUrl = "https://i.postimg.cc/DWkx44nh/uips-logo.png";
+  let logoBase64 = null;
+
   try {
     const logoResponse = await fetch(logoUrl);
     const logoBlob = await logoResponse.blob();
     const reader = new FileReader();
-    const logoBase64 = await new Promise((resolve) => {
+
+    logoBase64 = await new Promise((resolve) => {
       reader.onloadend = () => resolve(reader.result);
       reader.readAsDataURL(logoBlob);
     });
-    doc.addImage(logoBase64, "PNG", 25, -2, 80, 80);
   } catch {
     console.warn("⚠️ Logo not loaded, continuing without image.");
   }
 
-  // 🏫 Header Text
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("United International Private School", pageWidth / 2, 38, {
-    align: "center",
-  });
+  // 🧾 Date range text
+  let rangeText = "All Data";
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text(subtitle || "EduTrack Report", pageWidth / 2, 58, {
-    align: "center",
-  });
-
-  // 📅 Date Range (optional)
   if (from || to) {
-    const fromDate = from
+    const fromText = from
       ? new Date(from).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
         })
       : "Start";
-    const toDate = to
+
+    const toText = to
       ? new Date(to).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
         })
       : "Today";
-    doc.setFontSize(9);
-    doc.text(`Date Range: ${fromDate} - ${toDate}`, pageWidth / 2, 72, {
-      align: "center",
-    });
+
+    rangeText = `${fromText} - ${toText}`;
   }
 
-  // 🕒 Generated Date (top right)
-  const currentDate = new Date().toLocaleString();
-  doc.setFontSize(9);
-  doc.text(`Generated on: ${currentDate}`, pageWidth - 160, 72);
+  const generatedText = new Date().toLocaleString();
 
-  // 🧮 Table
+  // 🎨 Draw header (for EVERY page)
+  const drawHeader = () => {
+    // Maroon bar
+    doc.setFillColor(128, 0, 0);
+    doc.rect(0, 0, pageWidth, headerHeight, "F");
+
+    // Logo
+    if (logoBase64) {
+      doc.addImage(logoBase64, "PNG", 25, -2, 80, 80);
+    }
+
+    // Header Text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("United International Private School", pageWidth / 2, 30, {
+      align: "center",
+    });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(subtitle || title || "EduTrack Report", pageWidth / 2, 48, {
+      align: "center",
+    });
+
+    // Date Range & Generated Time
+    doc.setFontSize(9);
+    doc.text(`Date Range: ${rangeText}`, 40, 68);
+    doc.text(`Generated on: ${generatedText}`, pageWidth - 180, 68);
+  };
+
+  // 📋 Main table with repeating column headers
   autoTable(doc, {
-    startY: 100,
-    head: [tableHeaders.map((key) => formatHeaderName(key))],
+    startY: headerHeight + 20,
+    margin: { top: headerHeight + 20, left: 40, right: 40, bottom: 40 },
+    head: [tableHeaders.map((h) => formatHeaderName(h))],
     body: tableData,
-    styles: { fontSize: 8, halign: "center", cellPadding: 4 },
+    showHead: "everyPage", // 🔁 COLUMN HEADERS ON EVERY PAGE
+    styles: {
+      fontSize: 8,
+      halign: "center",
+      cellPadding: 4,
+    },
     headStyles: {
       fillColor: [128, 0, 0],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: { fillColor: [245, 245, 245] },
-    didDrawPage: (data) => {
-      // Repeat header for multi-page
-      if (data.pageNumber > 1) {
-        doc.setFillColor(128, 0, 0);
-        doc.rect(0, 0, pageWidth, 60, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text(subtitle || "EduTrack Report", pageWidth / 2, 40, {
-          align: "center",
-        });
-      }
+
+    didDrawPage: function (data) {
+      // 🔁 Draw full header on every page
+      drawHeader();
+
+      // Footer text
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        "UIPS EduTrack — Inventory Management System",
+        pageWidth / 2,
+        pageHeight - 20,
+        { align: "center" }
+      );
+
+      // Page number
+      doc.text(`Page ${data.pageNumber}`, pageWidth - 80, pageHeight - 20);
     },
   });
 
-  // 📊 Totals Section
+  // 📊 Totals Section (after table)
   if (totals) {
-    const finalY = doc.lastAutoTable.finalY + 30;
+    const finalY =
+      (doc.lastAutoTable && doc.lastAutoTable.finalY + 30) || pageHeight - 120;
+
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
+
     Object.entries(totals).forEach(([key, value], idx) => {
       doc.text(`${formatHeaderName(key)}: ${value}`, 40, finalY + idx * 15);
     });
   }
-
-  // 📎 Footer
-  doc.setFontSize(9);
-  doc.setTextColor(120, 120, 120);
-  doc.text(
-    "UIPS EduTrack — Inventory Management System",
-    pageWidth / 2,
-    doc.internal.pageSize.height - 20,
-    { align: "center" }
-  );
 
   return doc;
 }
