@@ -26,9 +26,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
-import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
+import axiosInstance from "@/lib/axios";
 
-// ✅ Helper functions (axios-based)
+// ✅ Helper functions
 async function fetchCheckoutByRef(receiptNo) {
   try {
     const res = await axiosInstance.get(`/checkouts/${receiptNo}`);
@@ -120,6 +120,8 @@ function ReturnForm() {
     }
 
     setTransactionRef(data.transactionNo || "-");
+
+    // 🆕 Include gradeLevel if available in checkout items
     setLines(
       data.items.map((it) => ({
         itemId: it.itemId,
@@ -128,8 +130,10 @@ function ReturnForm() {
         maxQty: it.quantity,
         quantity: 1,
         condition: "Good",
+        gradeLevel: it.gradeLevel || "", // Added
       }))
     );
+
     setMessage({ type: "success", text: "✅ Checkout loaded successfully." });
   };
 
@@ -143,6 +147,7 @@ function ReturnForm() {
         maxQty: 9999,
         quantity: 1,
         condition: "Good",
+        gradeLevel: "", // Added
       },
     ]);
   };
@@ -172,6 +177,7 @@ function ReturnForm() {
         sizeOrSource: l.sizeOrSource,
         quantity: Number(l.quantity),
         condition: l.condition,
+        gradeLevel: l.gradeLevel || "", // Added
         remarks: l.remarks || "",
       })),
     };
@@ -277,9 +283,10 @@ function ReturnForm() {
         {/* Items Table */}
         <div className="border rounded-lg overflow-hidden">
           <div className="grid grid-cols-12 bg-slate-100 text-xs font-medium text-slate-700 px-3 py-2">
-            <div className="col-span-4">Item</div>
+            <div className="col-span-3">Item</div>
             <div className="col-span-2">Qty</div>
-            <div className="col-span-3">Condition</div>
+            <div className="col-span-2">Condition</div>
+            <div className="col-span-2">Grade Level</div> {/* Added */}
             <div className="col-span-2">Remarks</div>
             <div className="col-span-1 text-right">Actions</div>
           </div>
@@ -291,7 +298,7 @@ function ReturnForm() {
                   key={i}
                   className="grid grid-cols-12 items-center px-3 py-2 gap-2"
                 >
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <Input
                       value={line.itemName}
                       onChange={(e) =>
@@ -310,7 +317,7 @@ function ReturnForm() {
                       }
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <Select
                       value={line.condition}
                       onValueChange={(v) => updateLine(i, { condition: v })}
@@ -323,6 +330,15 @@ function ReturnForm() {
                         <SelectItem value="Damaged">Damaged</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      placeholder="Grade Level"
+                      value={line.gradeLevel || ""}
+                      onChange={(e) =>
+                        updateLine(i, { gradeLevel: e.target.value })
+                      }
+                    />
                   </div>
                   <div className="col-span-2">
                     <Input
@@ -427,13 +443,14 @@ function ReturnList() {
                         <ul className="list-disc list-inside text-xs space-y-1">
                           {r.items.map((item, idx) => (
                             <li key={idx}>
-                              <span className="font-medium">
-                                {item.itemName}
-                              </span>{" "}
-                              {item.sizeOrSource
-                                ? `(${item.sizeOrSource})`
-                                : ""}{" "}
+                              <span className="font-medium">{item.itemName}</span>{" "}
+                              {item.sizeOrSource ? `(${item.sizeOrSource})` : ""}{" "}
                               — {item.quantity} pcs{" "}
+                              {item.gradeLevel ? (
+                                <span className="text-gray-500">
+                                  (Grade: {item.gradeLevel})
+                                </span>
+                              ) : null}{" "}
                               <span className="text-gray-500">
                                 ({item.condition})
                               </span>

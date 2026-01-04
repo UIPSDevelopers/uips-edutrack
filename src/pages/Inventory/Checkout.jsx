@@ -73,7 +73,7 @@ export default function Checkout() {
             itemId: item.itemId,
             itemName: item.itemName,
             itemType: item.itemType,
-            // sizeOrSource: item.sizeOrSource, // optional, backend ignores if not needed
+            gradeLevel: item.gradeLevel || "", // 🆕 Add Grade Level
             qty: 1,
           },
         ]);
@@ -126,8 +126,9 @@ export default function Checkout() {
           itemId: i.itemId,
           itemName: i.itemName,
           itemType: i.itemType,
+          gradeLevel: i.gradeLevel, // 🆕 include gradeLevel
           barcode: i.barcode,
-          sizeOrSource: i.sizeOrSource, // may be undefined, backend can ignore
+          sizeOrSource: i.sizeOrSource,
           quantity: i.qty,
         })),
       };
@@ -243,6 +244,7 @@ export default function Checkout() {
                     <th className="p-3 text-left">#</th>
                     <th className="p-3 text-left">Item Name</th>
                     <th className="p-3 text-left">Type</th>
+                    <th className="p-3 text-left">Grade Level</th> {/* 🆕 */}
                     <th className="p-3 text-left">Barcode</th>
                     <th className="p-3 text-center">Qty</th>
                     <th className="p-3 text-right">Action</th>
@@ -252,14 +254,11 @@ export default function Checkout() {
                   {items.map((item, i) => (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
                       <td className="p-3">{i + 1}</td>
-                      <td className="p-3 font-medium text-gray-800">
-                        {item.itemName}
-                      </td>
+                      <td className="p-3 font-medium text-gray-800">{item.itemName}</td>
                       <td className="p-3">{item.itemType}</td>
+                      <td className="p-3">{item.gradeLevel}</td> {/* 🆕 */}
                       <td className="p-3 text-gray-600">{item.barcode}</td>
-                      <td className="p-3 text-center font-semibold text-[#800000]">
-                        {item.qty}
-                      </td>
+                      <td className="p-3 text-center font-semibold text-[#800000]">{item.qty}</td>
                       <td className="p-3 text-right">
                         <button
                           onClick={() => handleRemove(item.barcode)}

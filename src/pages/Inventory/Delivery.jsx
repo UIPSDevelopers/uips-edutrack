@@ -16,7 +16,7 @@ import {
 import { PackagePlus, ScanLine } from "lucide-react";
 import InventoryTabs from "@/pages/Inventory/InventoryTabs";
 import { getCurrentUser } from "@/lib/getCurrentUser";
-import axiosInstance from "@/lib/axios"; // ✅ use axiosInstance
+import axiosInstance from "@/lib/axios";
 
 export default function Delivery() {
   const [scanned, setScanned] = useState([]);
@@ -28,22 +28,22 @@ export default function Delivery() {
   const [supplier, setSupplier] = useState("");
   const barcodeInputRef = useRef(null);
 
-  // ✅ Sidebar state (for mobile)
+  // Sidebar state for mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
 
-  // 🧍 Auto-fill logged-in user
+  // Auto-fill logged-in user
   useEffect(() => {
     setReceivedBy(getCurrentUser());
   }, []);
 
-  // Auto focus barcode input
+  // Auto-focus barcode input
   useEffect(() => {
     barcodeInputRef.current?.focus();
   }, []);
 
-  // 🔍 Add item by barcode (axios)
+  // Add item by barcode
   const handleAdd = async () => {
     if (!barcode.trim()) return;
 
@@ -77,6 +77,7 @@ export default function Delivery() {
             itemName: item.itemName,
             itemType: item.itemType,
             itemId: item.itemId,
+            gradeLevel: item.gradeLevel || "", // 🆕 Add gradeLevel
             sizeOrSource: item.sizeOrSource || "-",
           },
         ]);
@@ -94,7 +95,7 @@ export default function Delivery() {
     }
   };
 
-  // 🧾 Auto-add on Enter (barcode scanners)
+  // Auto-add on Enter key
   const handleBarcodeKeyPress = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -102,7 +103,7 @@ export default function Delivery() {
     }
   };
 
-  // 💾 Finalize Delivery modal open
+  // Open finalize modal
   const openFinalizeModal = () => {
     if (scanned.length === 0) {
       alert("⚠️ No items scanned yet.");
@@ -111,7 +112,7 @@ export default function Delivery() {
     setShowDialog(true);
   };
 
-  // ✅ Confirm finalize (axios)
+  // Confirm finalize delivery
   const handleConfirmFinalize = async () => {
     if (!deliveryNumber.trim()) {
       alert("⚠️ Delivery number is required.");
@@ -126,6 +127,7 @@ export default function Delivery() {
         itemId: i.itemId,
         itemName: i.itemName,
         itemType: i.itemType,
+        gradeLevel: i.gradeLevel, // 🆕 include gradeLevel
         sizeOrSource: i.sizeOrSource,
         barcode: [i.barcode],
         quantity: i.quantity,
@@ -223,6 +225,10 @@ export default function Delivery() {
                     <th className="p-3 text-left font-medium w-10">#</th>
                     <th className="p-3 text-left font-medium">Item Name</th>
                     <th className="p-3 text-left font-medium">Type</th>
+                    <th className="p-3 text-left font-medium">
+                      Grade Level
+                    </th>{" "}
+                    {/* 🆕 */}
                     <th className="p-3 text-left font-medium">Size/Source</th>
                     <th className="p-3 text-left font-medium">Barcode</th>
                     <th className="p-3 text-center font-medium w-20">Qty</th>
@@ -241,6 +247,7 @@ export default function Delivery() {
                         {item.itemName}
                       </td>
                       <td className="p-3">{item.itemType}</td>
+                      <td className="p-3">{item.gradeLevel}</td> {/* 🆕 */}
                       <td className="p-3">{item.sizeOrSource || "-"}</td>
                       <td className="p-3 text-gray-600">{item.barcode}</td>
                       <td className="p-3 text-center font-semibold text-[#800000]">
@@ -271,7 +278,7 @@ export default function Delivery() {
         </CardContent>
       </Card>
 
-      {/* 🧾 Finalize Delivery Modal */}
+      {/* Finalize Delivery Modal */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>

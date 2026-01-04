@@ -30,7 +30,8 @@ export default function BulkImportItems() {
   const [createInitialDelivery, setCreateInitialDelivery] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const requiredHeaders = ["itemType", "itemName", "sizeOrSource", "barcode"]; // quantity is optional
+  // ✅ added gradeLevel to required headers
+  const requiredHeaders = ["itemType", "itemName", "gradeLevel", "sizeOrSource", "barcode"];
 
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -59,6 +60,7 @@ export default function BulkImportItems() {
         __row: idx + 2, // Excel row number (approx)
         itemType: lowerMap["itemtype"] || "",
         itemName: lowerMap["itemname"] || "",
+        gradeLevel: lowerMap["gradelevel"] || "", // 🆕 Grade Level
         sizeOrSource:
           lowerMap["sizeorsource"] || lowerMap["size / source"] || "",
         barcode: lowerMap["barcode"] || "",
@@ -94,7 +96,7 @@ export default function BulkImportItems() {
       throw new Error(
         `Missing required columns: ${missing.join(
           ", "
-        )}. Expected: itemType,itemName,sizeOrSource,barcode`
+        )}. Expected: itemType,itemName,gradeLevel,sizeOrSource,barcode`
       );
     }
 
@@ -119,6 +121,7 @@ export default function BulkImportItems() {
         __row: lineIndex + 2,
         itemType: cols[idx.itemType] || "",
         itemName: cols[idx.itemName] || "",
+        gradeLevel: cols[idx.gradeLevel] || "", // 🆕 Grade Level
         sizeOrSource: cols[idx.sizeOrSource] || "",
         barcode: cols[idx.barcode] || "",
         quantity,
@@ -153,7 +156,7 @@ export default function BulkImportItems() {
       throw new Error(
         `Missing required columns in Excel: ${missing.join(
           ", "
-        )}. Expected headers (case-insensitive): itemType, itemName, sizeOrSource, barcode`
+        )}. Expected headers (case-insensitive): itemType, itemName, gradeLevel, sizeOrSource, barcode`
       );
     }
 
@@ -162,9 +165,9 @@ export default function BulkImportItems() {
 
   const handleDownloadTemplate = () => {
     const wsData = [
-      ["itemType", "itemName", "sizeOrSource", "barcode", "quantity"],
-      ["P.E. Uniform", "PE T-Shirt", "Small", "ITEM-000001", 10],
-      ["Regular Uniform", "Formal Pants", "Size 32", "ITEM-000002", 5],
+      ["itemType", "itemName", "gradeLevel", "sizeOrSource", "barcode", "quantity"],
+      ["P.E. Uniform", "PE T-Shirt", "Grade 7", "Small", "ITEM-000001", 10],
+      ["Regular Uniform", "Formal Pants", "Grade 9", "Size 32", "ITEM-000002", 5],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -243,13 +246,13 @@ export default function BulkImportItems() {
       const payloadItems = rows.map((r) => ({
         itemType: r.itemType,
         itemName: r.itemName,
+        gradeLevel: r.gradeLevel, // 🆕 include Grade Level
         sizeOrSource: r.sizeOrSource,
         barcode: r.barcode,
         quantity: Number(r.quantity) || 0,
         addedBy,
       }));
 
-      // 🆕 extra payload fields for initial delivery
       const payload = {
         items: payloadItems,
         createInitialDelivery,
@@ -258,7 +261,6 @@ export default function BulkImportItems() {
           : null,
       };
 
-      // ✅ axiosInstance automatically attaches Authorization: Bearer <token>
       const { data } = await axiosInstance.post("/inventory/bulk-add", payload);
 
       const failedFromServer =
@@ -311,6 +313,7 @@ export default function BulkImportItems() {
           details: failedOnly.map((r) => ({
             row: r.__row,
             itemName: r.itemName,
+            gradeLevel: r.gradeLevel, // 🆕 Grade Level
             barcode: r.barcode,
             error: r.__error,
           })),
@@ -362,11 +365,11 @@ export default function BulkImportItems() {
               file with the following columns:
             </p>
             <div className="bg-gray-100 border border-gray-200 rounded-md p-2 text-[11px] font-mono text-gray-700">
-              itemType,itemName,sizeOrSource,barcode,quantity
+              itemType,itemName,gradeLevel,sizeOrSource,barcode,quantity
               <br />
-              P.E. Uniform,PE T-Shirt,Small,ITEM-000001,10
+              P.E. Uniform,PE T-Shirt,Grade 7,Small,ITEM-000001,10
               <br />
-              Regular Uniform,Formal Pants,Size 32,ITEM-000002,5
+              Regular Uniform,Formal Pants,Grade 9,Size 32,ITEM-000002,5
             </div>
             <p className="text-[11px] text-gray-500">
               <b>Note:</b> <code>quantity</code> is optional. If omitted or
@@ -469,7 +472,8 @@ export default function BulkImportItems() {
                   {importSummary.details.map((d, i) => (
                     <div key={i} className="mb-1">
                       <span className="font-mono text-[11px] text-gray-600">
-                        Row {d.row || "?"} – {d.itemName} ({d.barcode}):
+                        Row {d.row || "?"} – {d.itemName} ({d.gradeLevel}) (
+                        {d.barcode}):
                       </span>{" "}
                       <span className="text-[11px] text-red-700">
                         {d.error}
@@ -510,6 +514,7 @@ export default function BulkImportItems() {
                       <th className="border px-2 py-1 text-left">#</th>
                       <th className="border px-2 py-1 text-left">Item Type</th>
                       <th className="border px-2 py-1 text-left">Item Name</th>
+                      <th className="border px-2 py-1 text-left">Grade Level</th> {/* 🆕 */}
                       <th className="border px-2 py-1 text-left">
                         Size / Source
                       </th>
@@ -524,6 +529,7 @@ export default function BulkImportItems() {
                         <td className="border px-2 py-1">{idx + 1}</td>
                         <td className="border px-2 py-1">{row.itemType}</td>
                         <td className="border px-2 py-1">{row.itemName}</td>
+                        <td className="border px-2 py-1">{row.gradeLevel}</td> {/* 🆕 */}
                         <td className="border px-2 py-1">{row.sizeOrSource}</td>
                         <td className="border px-2 py-1">{row.barcode}</td>
                         <td className="border px-2 py-1">

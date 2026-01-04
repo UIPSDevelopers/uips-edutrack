@@ -120,6 +120,14 @@ export default function Reports() {
     }
 
     const tableHeaders = Object.keys(rows[0]);
+    // add Grade Level if exists
+    if (
+      !tableHeaders.includes("gradeLevel") &&
+      rows.some((r) => r.gradeLevel)
+    ) {
+      tableHeaders.push("gradeLevel");
+    }
+
     const tableData = rows.map((item) =>
       tableHeaders.map((col) =>
         typeof item[col] === "object"
@@ -385,6 +393,12 @@ export default function Reports() {
                             </th>
                           )
                         )}
+                        {!Object.keys(data[0]).includes("gradeLevel") &&
+                          data.some((r) => r.gradeLevel) && (
+                            <th className="p-2 text-left capitalize border-b">
+                              Grade Level
+                            </th>
+                          )}
                       </tr>
                     </thead>
                     <tbody>
@@ -397,6 +411,11 @@ export default function Reports() {
                                 : val?.toString()}
                             </td>
                           ))}
+                          {!row.gradeLevel &&
+                            row.gradeLevel !== undefined &&
+                            data.some((r) => r.gradeLevel) && (
+                              <td className="p-2 border-b text-gray-700">-</td>
+                            )}
                         </tr>
                       ))}
                     </tbody>

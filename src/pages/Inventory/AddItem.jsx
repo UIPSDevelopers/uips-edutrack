@@ -27,6 +27,7 @@ export default function AddItem() {
   const [form, setForm] = useState({
     itemType: "",
     itemName: "",
+    gradeLevel: "", // 🆕 Added Grade Level
     sizeOrSource: "",
     barcode: "",
     addedBy: user ? `${user.firstname} ${user.lastname}` : "Unknown User",
@@ -80,6 +81,7 @@ export default function AddItem() {
         setForm({
           itemType: "",
           itemName: "",
+          gradeLevel: "", // reset Grade Level
           sizeOrSource: "",
           barcode: "",
           addedBy: form.addedBy, // keep same user
@@ -160,6 +162,18 @@ export default function AddItem() {
             />
           </div>
 
+          {/* Grade Level */}
+          <div>
+            <label className="text-sm font-medium">Grade Level</label>
+            <Input
+              name="gradeLevel"
+              placeholder="Enter grade level (e.g., Grade 7)"
+              value={form.gradeLevel}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+
           {/* Size / Source */}
           <div>
             <label className="text-sm font-medium">Size / Source</label>
@@ -224,7 +238,7 @@ export default function AddItem() {
                   displayValue={true}
                 />
                 <p className="text-sm font-medium text-center mt-2">
-                  {form.itemName} — {form.sizeOrSource}
+                  {form.itemName} — {form.gradeLevel} — {form.sizeOrSource}
                 </p>
               </div>
 
