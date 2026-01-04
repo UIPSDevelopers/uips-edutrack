@@ -35,6 +35,7 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({
     itemName: "",
+    gradeLevel: "",
     itemType: "",
     sizeOrSource: "",
     barcode: "",
@@ -44,7 +45,7 @@ export default function Inventory() {
 
   // 🆕 Pagination state (limit = 0 means "All")
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20); // 10 / 20 / 50 / 0("All")
+  const [limit, setLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
@@ -140,6 +141,7 @@ export default function Inventory() {
     setEditingItem(item);
     setEditForm({
       itemName: item.itemName,
+      gradeLevel: item.gradeLevel || "",
       itemType: item.itemType,
       sizeOrSource: item.sizeOrSource || "",
       barcode: item.barcode,
@@ -245,6 +247,7 @@ export default function Inventory() {
           "#",
           "Item ID",
           "Item Name",
+          "Grade Level",
           "Type",
           "Size / Source",
           "Barcode / Serial",
@@ -257,6 +260,7 @@ export default function Inventory() {
         index + 1,
         item.itemId,
         item.itemName,
+        item.gradeLevel || "-",
         item.itemType,
         item.sizeOrSource || "-",
         item.barcode || "-",
@@ -372,6 +376,7 @@ export default function Inventory() {
           "#",
           "Item ID",
           "Item Name",
+          "Grade Level",
           "Type",
           "Size / Source",
           "Barcode / Serial",
@@ -384,6 +389,7 @@ export default function Inventory() {
         index + 1,
         item.itemId,
         item.itemName,
+        item.gradeLevel || "-",
         item.itemType,
         item.sizeOrSource || "-",
         item.barcode || "-",
@@ -433,7 +439,6 @@ export default function Inventory() {
 
   return (
     <main className="p-6 space-y-8 relative">
-      {/* 🔹 Everything inside this wrapper will blur if unauthorized */}
       <div
         className={
           canViewInventory
@@ -505,14 +510,13 @@ export default function Inventory() {
               </Select>
             </div>
 
-            {/* Rows per page */}
             <div className="w-1/2 md:w-40">
               <Select
                 value={isAll ? "0" : String(limit)}
                 onValueChange={(val) => {
                   const num = Number(val);
                   setPage(1);
-                  setLimit(num); // 0 = All
+                  setLimit(num);
                 }}
               >
                 <SelectTrigger className="h-10 border border-gray-300 focus:ring-2 focus:ring-[#800000]">
@@ -608,6 +612,7 @@ export default function Inventory() {
                       <th className="p-3 font-medium">#</th>
                       <th className="p-3 font-medium">Item ID</th>
                       <th className="p-3 font-medium">Item Name</th>
+                      <th className="p-3 font-medium">Grade Level</th>
                       <th className="p-3 font-medium">Type</th>
                       <th className="p-3 font-medium">Size / Source</th>
                       <th className="p-3 font-medium">Barcode / Serial</th>
@@ -629,6 +634,7 @@ export default function Inventory() {
                           {item.itemId}
                         </td>
                         <td className="p-3">{item.itemName}</td>
+                        <td className="p-3">{item.gradeLevel || "-"}</td>
                         <td className="p-3">{item.itemType}</td>
                         <td className="p-3">{item.sizeOrSource || "-"}</td>
                         <td className="p-3">{item.barcode}</td>
@@ -677,6 +683,15 @@ export default function Inventory() {
                 name="itemName"
                 placeholder="Item Name"
                 value={editForm.itemName}
+                onChange={handleEditChange}
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Grade Level
+              </label>
+              <Input
+                name="gradeLevel"
+                placeholder="Grade Level"
+                value={editForm.gradeLevel}
                 onChange={handleEditChange}
               />
               <label className="text-sm font-medium text-gray-700">
