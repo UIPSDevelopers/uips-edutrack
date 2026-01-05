@@ -60,6 +60,16 @@ export default function Inventory() {
   const user = storedUser ? JSON.parse(storedUser) : null;
   const role = user?.role;
 
+  const handleBulkBarcodePrint = () => {
+    if (filtered.length === 0) {
+      alert("⚠️ No items to print.");
+      return;
+    }
+
+    localStorage.setItem("printBarcodes", JSON.stringify(filtered));
+    window.open("/inventory/print-barcodes", "_blank");
+  };
+
   // 🎛 Role-based permissions
   const canViewInventory = [
     "IT",
@@ -492,11 +502,13 @@ export default function Inventory() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Types</SelectItem>
-                  <SelectItem value="Regular Uniform">Regular Uniform</SelectItem>
-                  <SelectItem value="P.E Uniform">
-                    P.E Uniform
+                  <SelectItem value="Regular Uniform">
+                    Regular Uniform
                   </SelectItem>
-                  <SelectItem value="Scouting Uniform">Scouting Uniform</SelectItem>
+                  <SelectItem value="P.E Uniform">P.E Uniform</SelectItem>
+                  <SelectItem value="Scouting Uniform">
+                    Scouting Uniform
+                  </SelectItem>
                   <SelectItem value="School Supplies">
                     School Supplies
                   </SelectItem>
@@ -504,7 +516,9 @@ export default function Inventory() {
                     Office Supplies
                   </SelectItem>
                   <SelectItem value="Staff Uniform">Staff Uniform</SelectItem>
-                  <SelectItem value="Awards & Recognition">Awards & Recognition</SelectItem>
+                  <SelectItem value="Awards & Recognition">
+                    Awards & Recognition
+                  </SelectItem>
                   <SelectItem value="Others">Others</SelectItem>
                 </SelectContent>
               </Select>
@@ -592,6 +606,13 @@ export default function Inventory() {
                 >
                   <Package className="w-4 h-4" />
                   Export ALL
+                </Button>
+                <Button
+                  onClick={handleBulkBarcodePrint}
+                  className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  Bulk Barcode Print
                 </Button>
               </div>
             )}
