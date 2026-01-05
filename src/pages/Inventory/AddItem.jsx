@@ -138,13 +138,13 @@ export default function AddItem() {
                 <SelectValue placeholder="Select Item Type" />
               </SelectTrigger>
               <SelectContent className="text-sm">
-                <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
-                <SelectItem value="Regular Uniform">Regular Uniform</SelectItem>
-                <SelectItem value="Scouting">Scouting</SelectItem>
+                <SelectItem value="P.E. Uniform">Regular Uniform</SelectItem>
+                <SelectItem value="Regular Uniform">P.E Uniform</SelectItem>
+                <SelectItem value="Scouting">Scouting Uniform</SelectItem>
                 <SelectItem value="School Supplies">School Supplies</SelectItem>
                 <SelectItem value="Office Supplies">Office Supplies</SelectItem>
-                <SelectItem value="Books">Books</SelectItem>
-                <SelectItem value="Graduation">Graduation</SelectItem>
+                <SelectItem value="Books">Staff Uniform</SelectItem>
+                <SelectItem value="Graduation">Awards & Recognition</SelectItem>
                 <SelectItem value="Others">Others</SelectItem>
               </SelectContent>
             </Select>

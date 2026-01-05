@@ -492,19 +492,19 @@ export default function Inventory() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Types</SelectItem>
-                  <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
-                  <SelectItem value="Regular Uniform">
-                    Regular Uniform
+                  <SelectItem value="Regular Uniform">Regular Uniform</SelectItem>
+                  <SelectItem value="P.E Uniform">
+                    P.E Uniform
                   </SelectItem>
-                  <SelectItem value="Scouting">Scouting</SelectItem>
+                  <SelectItem value="Scouting Uniform">Scouting Uniform</SelectItem>
                   <SelectItem value="School Supplies">
                     School Supplies
                   </SelectItem>
                   <SelectItem value="Office Supplies">
                     Office Supplies
                   </SelectItem>
-                  <SelectItem value="Books">Books</SelectItem>
-                  <SelectItem value="Graduation">Graduation</SelectItem>
+                  <SelectItem value="Staff Uniform">Staff Uniform</SelectItem>
+                  <SelectItem value="Awards & Recognition">Awards & Recognition</SelectItem>
                   <SelectItem value="Others">Others</SelectItem>
                 </SelectContent>
               </Select>
