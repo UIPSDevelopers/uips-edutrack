@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef } from "react";
 import JsBarcode from "jsbarcode";
 

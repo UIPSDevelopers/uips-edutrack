@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import axiosInstance from "@/lib/axios";
+import PrintBarcodes from "./PrintBarcodes";
 
 export default function Inventory() {
   const [items, setItems] = useState([]);
@@ -67,7 +68,7 @@ export default function Inventory() {
     }
 
     localStorage.setItem("printBarcodes", JSON.stringify(filtered));
-    window.open("/inventory/print-barcodes", "_blank");
+    window.open("/Inventory/PrintBarcodes", "_blank");
   };
 
   // 🎛 Role-based permissions
