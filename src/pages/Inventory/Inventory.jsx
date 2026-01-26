@@ -106,7 +106,7 @@ export default function Inventory() {
 
         const params = {
           search: searchTerm || undefined,
-          type: selectedType !== "All" ? selectedType : undefined,
+          itemType: selectedType !== "All" ? selectedType : undefined,
         };
 
         if (isAll) {
@@ -326,7 +326,7 @@ export default function Inventory() {
       const params = {
         all: true,
         search: searchTerm || undefined,
-        type: selectedType !== "All" ? selectedType : undefined,
+        itemType: selectedType !== "All" ? selectedType : undefined,
       };
 
       const res = await axiosInstance.get("/inventory", { params });
