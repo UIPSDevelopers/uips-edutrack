@@ -18,6 +18,7 @@ import PropertyTagging from "@/pages/PropertyTagging";
 import ReportsPage from "@/pages/ReportsPage";
 import Settings from "@/pages/Settings";
 import Visitors from "@/pages/Visitors";
+import PrintBarcodes from "@/pages/Inventory/PrintBarcodes";
 
 import { useWarmupServer } from "@/hooks/useWarmupServer";
 import useAutoLogout from "@/hooks/useAutoLogout";
@@ -101,6 +102,15 @@ function App() {
             <Route path="/inventory/returns" element={<Returns />} />
             <Route path="/inventory/reports" element={<Reports />} />
           </Route>
+          {/* 🖨️ Print Barcodes (NO layout) */}
+          <Route
+            path="/inventory/print-barcodes"
+            element={
+              <ProtectedRoute>
+                <PrintBarcodes />
+              </ProtectedRoute>
+            }
+          />
 
           {/* 🚧 Fallback Route (404 → login) */}
           <Route path="*" element={<Navigate to="/" replace />} />

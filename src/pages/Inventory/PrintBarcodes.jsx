@@ -1,10 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import JsBarcode from "jsbarcode";
 
 function Barcode({ value }) {
   const ref = useRef(null);
 
   useEffect(() => {
+    if (!value || !ref.current) return;
+
     JsBarcode(ref.current, value, {
       format: "CODE128",
       width: 2,
@@ -14,18 +16,28 @@ function Barcode({ value }) {
     });
   }, [value]);
 
-  return <svg ref={ref}></svg>;
+  return <svg ref={ref} />;
 }
 
 export default function PrintBarcodes() {
-  const items =
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("printBarcodes") || "[]")
-      : [];
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
+    const stored = localStorage.getItem("printBarcodes");
+    if (stored) {
+      setItems(JSON.parse(stored));
+    }
+
     setTimeout(() => window.print(), 500);
   }, []);
+
+  if (!items.length) {
+    return (
+      <div className="p-10 text-center text-gray-500">
+        No barcodes to print.
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -48,7 +60,7 @@ export default function PrintBarcodes() {
         ))}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media print {
           body {
             margin: 0;

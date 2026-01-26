@@ -68,7 +68,7 @@ export default function Inventory() {
     }
 
     localStorage.setItem("printBarcodes", JSON.stringify(filtered));
-    window.open("/Inventory/PrintBarcodes", "_blank");
+    window.open("/inventory/print-barcodes", "_blank");
   };
 
   // 🎛 Role-based permissions
