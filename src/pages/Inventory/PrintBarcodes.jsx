@@ -45,7 +45,7 @@ export default function PrintBarcodes() {
 
   return (
     <div className="p-8">
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 gap-6">
         {items.map((item) => (
           <div
             key={item.itemId}
