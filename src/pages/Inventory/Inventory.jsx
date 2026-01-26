@@ -506,7 +506,7 @@ export default function Inventory() {
                   <SelectItem value="Regular Uniform">
                     Regular Uniform
                   </SelectItem>
-                  <SelectItem value="P.E Uniform">P.E Uniform</SelectItem>
+                  <SelectItem value="P.E. Uniform">P.E. Uniform</SelectItem>
                   <SelectItem value="Scouting Uniform">
                     Scouting Uniform
                   </SelectItem>
