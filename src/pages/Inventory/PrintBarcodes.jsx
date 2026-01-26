@@ -16,7 +16,11 @@ function Barcode({ value }) {
     });
   }, [value]);
 
-  return <svg ref={ref} />;
+  return (
+    <div className="flex justify-center mt-2">
+      <svg ref={ref} />
+    </div>
+  );
 }
 
 export default function PrintBarcodes() {
