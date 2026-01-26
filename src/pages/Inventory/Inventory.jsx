@@ -50,6 +50,25 @@ export default function Inventory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
+  const [sortConfig, setSortConfig] = useState({
+    key: null, // column to sort by
+    direction: "asc", // 'asc' or 'desc'
+  });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        // Toggle direction if same column
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      // New column defaults to ascending
+      return { key, direction: "asc" };
+    });
+  };
+
   // 🔹 Sidebar control
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -122,8 +141,8 @@ export default function Inventory() {
         const list = Array.isArray(data)
           ? data
           : Array.isArray(data.items)
-          ? data.items
-          : [];
+            ? data.items
+            : [];
 
         setItems(list);
         setFiltered(list);
@@ -171,17 +190,17 @@ export default function Inventory() {
     try {
       const res = await axiosInstance.put(
         `/inventory/${editingItem.itemId}`,
-        editForm
+        editForm,
       );
       const data = res.data;
 
       alert("✅ Item updated successfully!");
       setShowDialog(false);
       setItems((prev) =>
-        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
+        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it)),
       );
       setFiltered((prev) =>
-        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it))
+        prev.map((it) => (it.itemId === editingItem.itemId ? data.item : it)),
       );
     } catch (error) {
       console.error("Error updating:", error);
@@ -295,7 +314,7 @@ export default function Inventory() {
       const totalItemsForPdf = filtered.length;
       const totalQuantityForPdf = filtered.reduce(
         (acc, i) => acc + (i.quantity || 0),
-        0
+        0,
       );
       const finalY = doc.lastAutoTable.finalY + 30;
 
@@ -310,7 +329,7 @@ export default function Inventory() {
         "UIPS EduTrack — Inventory Management System",
         pageWidth / 2,
         doc.internal.pageSize.height - 20,
-        { align: "center" }
+        { align: "center" },
       );
 
       doc.save(`UIPS_Inventory_${new Date().toISOString().split("T")[0]}.pdf`);
@@ -335,8 +354,8 @@ export default function Inventory() {
       const list = Array.isArray(data)
         ? data
         : Array.isArray(data.items)
-        ? data.items
-        : [];
+          ? data.items
+          : [];
 
       if (!list.length) {
         alert("⚠️ No data to export.");
@@ -436,17 +455,39 @@ export default function Inventory() {
         "UIPS EduTrack — Inventory Management System",
         pageWidth / 2,
         doc.internal.pageSize.height - 20,
-        { align: "center" }
+        { align: "center" },
       );
 
       doc.save(
-        `UIPS_Inventory_ALL_${new Date().toISOString().split("T")[0]}.pdf`
+        `UIPS_Inventory_ALL_${new Date().toISOString().split("T")[0]}.pdf`,
       );
     } catch (err) {
       console.error("❌ FULL PDF generation failed:", err);
       alert("⚠️ Failed to generate FULL export PDF.");
     }
   };
+
+  const sortedItems = React.useMemo(() => {
+    if (!sortConfig.key) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const valA = a[sortConfig.key];
+      const valB = b[sortConfig.key];
+
+      // Handle numbers
+      if (typeof valA === "number" && typeof valB === "number") {
+        return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+      }
+
+      // Handle strings (including undefined/null)
+      const strA = valA ? String(valA).toLowerCase() : "";
+      const strB = valB ? String(valB).toLowerCase() : "";
+
+      if (strA < strB) return sortConfig.direction === "asc" ? -1 : 1;
+      if (strA > strB) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filtered, sortConfig]);
 
   return (
     <main className="p-6 space-y-8 relative">
@@ -623,7 +664,7 @@ export default function Inventory() {
                 <p className="text-center text-gray-500 py-6">
                   Loading items...
                 </p>
-              ) : filtered.length === 0 ? (
+              ) : sortedItems.length === 0 ? (
                 <p className="text-center text-gray-500 py-6">
                   No matching items found.
                 </p>
@@ -632,19 +673,39 @@ export default function Inventory() {
                   <thead>
                     <tr className="bg-gray-100 text-gray-700 text-left">
                       <th className="p-3 font-medium">#</th>
-                      <th className="p-3 font-medium">Item ID</th>
-                      <th className="p-3 font-medium">Item Name</th>
-                      <th className="p-3 font-medium">Grade Level</th>
-                      <th className="p-3 font-medium">Type</th>
-                      <th className="p-3 font-medium">Size / Source</th>
-                      <th className="p-3 font-medium">Barcode / Serial</th>
-                      <th className="p-3 font-medium text-center">Quantity</th>
-                      <th className="p-3 font-medium">Added By</th>
+
+                      {[
+                        { key: "itemId", label: "Item ID" },
+                        { key: "itemName", label: "Item Name" },
+                        { key: "gradeLevel", label: "Grade Level" },
+                        { key: "itemType", label: "Type" },
+                        { key: "sizeOrSource", label: "Size / Source" },
+                        { key: "barcode", label: "Barcode / Serial" },
+                        { key: "quantity", label: "Quantity", center: true },
+                        { key: "addedBy", label: "Added By" },
+                      ].map((col) => (
+                        <th
+                          key={col.key}
+                          className={`p-3 font-medium cursor-pointer select-none ${
+                            col.center ? "text-center" : ""
+                          }`}
+                          onClick={() => handleSort(col.key)}
+                        >
+                          {col.label}
+                          {sortConfig.key === col.key && (
+                            <span>
+                              {sortConfig.direction === "asc" ? " ▲" : " ▼"}
+                            </span>
+                          )}
+                        </th>
+                      ))}
+
                       <th className="p-3 font-medium text-right">Actions</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {filtered.map((item, i) => (
+                    {sortedItems.map((item, i) => (
                       <tr
                         key={item.itemId}
                         className="border-b hover:bg-gray-50 transition"
@@ -659,11 +720,11 @@ export default function Inventory() {
                         <td className="p-3">{item.gradeLevel || "-"}</td>
                         <td className="p-3">{item.itemType}</td>
                         <td className="p-3">{item.sizeOrSource || "-"}</td>
-                        <td className="p-3">{item.barcode}</td>
+                        <td className="p-3">{item.barcode || "-"}</td>
                         <td className="p-3 text-center font-semibold">
                           {item.quantity ?? 0}
                         </td>
-                        <td className="p-3">{item.addedBy}</td>
+                        <td className="p-3">{item.addedBy || "-"}</td>
                         <td className="p-3 text-right text-gray-500 space-x-3">
                           {canEditInventory && (
                             <button
